@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "346126009274",
+    "project_id": "healthmate-f80af",
+    "storage_bucket": "healthmate-f80af.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:346126009274:android:df08bab5dc6d80180b5383",
+        "android_client_info": {
+          "package_name": "com.healthyapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA1kKv-hkQq0qL6WgYOc90YvRbA9wg699Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:346126009274:android:0d69b69e2a6559970b5383",
+        "android_client_info": {
+          "package_name": "com.healthyapp2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA1kKv-hkQq0qL6WgYOc90YvRbA9wg699Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
