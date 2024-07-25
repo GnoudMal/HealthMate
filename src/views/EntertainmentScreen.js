@@ -1,102 +1,111 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ImageBackground } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+    View,
+    Text,
+    StyleSheet,
+    Image,
+    ImageBackground,
+    TouchableOpacity,
+    ActivityIndicator,
+    FlatList
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
-import TrackPlayer, { Capability, usePlaybackState } from 'react-native-track-player';
-
-const setupPlayer = async () => {
-    await TrackPlayer.setupPlayer();
-    await TrackPlayer.updateOptions({
-        stopWithApp: true,
-        capabilities: [
-            Capability.Play,
-            Capability.Pause,
-            Capability.Stop,
-        ],
-    });
-    await TrackPlayer.add({
-        id: '1',
-        url: require('../music/nhacTre.mp3'),
-        title: 'Your Audio Title',
-        artist: 'Your Artist Name',
-        // artwork: require('../images/audio-artwork.png')
-    });
-};
+import TrackPlayer, {
+    useTrackPlayerEvents,
+    usePlaybackState,
+    useProgress,
+    Event,
+    State
+} from 'react-native-track-player';
+import { addTracks, setupPlayer } from '../service/servicePlay';
+import Playlist from '../Components/MusicComponent/playList';
+import Header from '../Components/MusicComponent/HeaderMusic';
+import TrackProgress from '../Components/MusicComponent/TrackProgress';
 
 const MentalHealthScreen = () => {
-    const playbackState = usePlaybackState();
+    const [isPlayerReady, setIsPlayerReady] = useState(false);
 
     useEffect(() => {
-        setupPlayer();
-
-        return () => {
-            TrackPlayer.destroy();
-        };
+        async function setup() {
+            let isSetup = await setupPlayer();
+            const queue = await TrackPlayer.getQueue();
+            if (isSetup && queue.length <= 0) {
+                await addTracks();
+            }
+            setIsPlayerReady(isSetup);
+        }
+        setup();
     }, []);
 
-    const togglePlayback = async () => {
-        if (playbackState === TrackPlayer.STATE_PAUSED || playbackState === TrackPlayer.STATE_STOPPED) {
-            await TrackPlayer.play();
-        } else {
-            await TrackPlayer.pause();
-        }
-    };
+    if (!isPlayerReady) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <ActivityIndicator size="large" color="#bbb" />
+            </SafeAreaView>
+        );
+    }
+
+    const renderItem = ({ item }) => (
+        <View style={styles.contentContainer}>
+            <View style={styles.header}>
+                <TouchableOpacity style={styles.backButton}>
+                    <Icon name="arrow-back" size={24} color="black" />
+                </TouchableOpacity>
+                <Text style={styles.title}>TINH THẦN</Text>
+            </View>
+
+            <View style={styles.imageContainer}>
+                <ImageBackground
+                    source={require('../images/imgMental.png')}
+                    style={styles.imageBackground}
+                    imageStyle={styles.imageBackgroundImage}
+                >
+                    <Image
+                        source={require('../images/Thien.png')}
+                        style={styles.image}
+                    />
+                </ImageBackground>
+            </View>
+
+            <Text style={styles.quote}>
+                Thiền định không phải là chạy trốn khỏi thế giới, mà là trở về với chính mình.
+            </Text>
+
+            <Header />
+            <TrackProgress />
+            <Playlist />
+
+            <View style={styles.playlist}>
+                <Text style={styles.playlistTitle}>Workout with experts:</Text>
+                <View style={styles.expertContainer}>
+                    <TouchableOpacity style={styles.expertCard}>
+                        <Image
+                            source={require('../images/Yoga.png')}
+                            style={styles.expertImage}
+                        />
+                        <Text style={styles.expertText}>Yoga</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.expertCard}>
+                        <Image
+                            source={require('../images/Meditation.jpg')}
+                            style={styles.expertImage}
+                        />
+                        <Text style={styles.expertText}>Meditation</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        </View>
+    );
 
     return (
         <SafeAreaView style={styles.container}>
-            <ScrollView  >
-                <View >
-                    <View style={styles.header}>
-                        <TouchableOpacity style={styles.backButton}>
-                            <Icon name="arrow-back" size={24} color="black" />
-                        </TouchableOpacity>
-                        <Text style={styles.title}>TINH THẦN</Text>
-                    </View>
-                </View>
-
-                <View style={styles.imageContainer}>
-                    <ImageBackground
-                        source={require('../images/imgMental.png')}
-                        style={styles.imageBackground}
-                        imageStyle={styles.imageBackgroundImage}
-                    >
-                        <Image
-                            source={require('../images/Thien.png')}
-                            style={styles.image}
-                        />
-                    </ImageBackground>
-                </View>
-
-                <Text style={styles.quote}>
-                    Thiền định không phải là chạy trốn khỏi thế giới, mà là trở về với chính mình.
-                </Text>
-
-                <TouchableOpacity onPress={togglePlayback} style={styles.playButton}>
-                    <Icon name={playbackState === TrackPlayer.STATE_PLAYING ? 'pause' : 'play'} size={24} color="white" />
-                </TouchableOpacity>
-
-                <View style={styles.playlist}>
-                    <Text style={styles.playlistTitle}>Workout with experts:</Text>
-                    <View style={styles.expertContainer}>
-                        <TouchableOpacity style={styles.expertCard}>
-                            <Image
-                                source={require('../images/Yoga.png')}
-                                style={styles.expertImage}
-                            />
-                            <Text style={styles.expertText}>Yoga</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.expertCard}>
-                            <Image
-                                source={require('../images/Meditation.jpg')}
-                                style={styles.expertImage}
-                            />
-                            <Text style={styles.expertText}>Meditation</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </ScrollView>
+            <FlatList
+                data={[{}]} // Dữ liệu giả, vì không có dữ liệu thực để hiển thị
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={renderItem}
+            />
         </SafeAreaView>
-
     );
 };
 
@@ -105,6 +114,9 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#F5F5F5',
         padding: 16,
+    },
+    contentContainer: {
+        flex: 1,
     },
     header: {
         flexDirection: 'row',
@@ -138,7 +150,7 @@ const styles = StyleSheet.create({
         elevation: 8
     },
     imageBackgroundImage: {
-        borderRadius: 30, // Bo góc cho hình ảnh bên trong ImageBackground
+        borderRadius: 30,
     },
     image: {
         width: 236,
@@ -192,6 +204,12 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         color: '#333',
+    },
+    trackProgress: {
+        marginTop: 40,
+        textAlign: 'center',
+        fontSize: 24,
+        color: '#eee'
     },
 });
 
