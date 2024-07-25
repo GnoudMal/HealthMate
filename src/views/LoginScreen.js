@@ -4,6 +4,8 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useDispatch } from 'react-redux';
+import { setUserId } from '../redux/reducers/userReducer';
 
 const LoginAccount = ({ navigation, route }) => {
     const [email, setEmail] = useState('');
@@ -13,6 +15,7 @@ const LoginAccount = ({ navigation, route }) => {
     const [yPosition] = useState(new Animated.Value(100));
     const [modalVisible, setModalVisible] = useState(false);
     const [modalMessage, setModalMessage] = useState('');
+    const dispatch = useDispatch();
 
     useEffect(() => {
         if (route.params?.email && route.params?.password) {
@@ -59,6 +62,19 @@ const LoginAccount = ({ navigation, route }) => {
                     await AsyncStorage.setItem('userId', user.uid);
                     console.log('check2', JSON.stringify(userData));
                     console.log('check3', user.uid);
+
+                    // dispatch(setUserId(user.uid))
+                    //     .then(() => {
+                    //         // Điều hướng sau khi dispatch thành công
+                    //         navigation.navigate('HomeScreen');
+                    //     })
+                    //     .catch(error => {
+                    //         // Xử lý lỗi khi dispatch không thành công
+                    //         console.error('Dispatch error:', error);
+                    //         setModalMessage('Đã xảy ra lỗi khi cập nhật thông tin người dùng.');
+                    //         setModalVisible(true);
+                    //     });
+
                     navigation.navigate('HomeScreen');
                 } else {
                     navigation.navigate('AdditionalInfoScreen');
@@ -90,7 +106,7 @@ const LoginAccount = ({ navigation, route }) => {
                 }
                 default: {
                     setModalMessage('Đã xảy ra lỗi không xác định.');
-                    console.log(error.code);
+                    console.log('error', error.code);
                     break;
                 }
             }

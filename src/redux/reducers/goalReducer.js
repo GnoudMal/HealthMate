@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchGoals, addGoalToFirestore, deleteGoalFromFirestore, updateGoalInFirestore } from '../actions/goalActions';
+import { fetchGoals, addGoalToFirestore, deleteGoalFromFirestore, updateGoalInFirestore, updateGoal } from '../actions/GoalActions';
 
 const goalSlice = createSlice({
     name: 'goal',
@@ -24,6 +24,13 @@ const goalSlice = createSlice({
             })
             .addCase(addGoalToFirestore.fulfilled, (state, action) => {
                 state.goals.push(action.payload);
+            })
+            .addCase(updateGoal.fulfilled, (state, action) => {
+                // Cập nhật mục tiêu trong mảng `goals` dựa trên ID
+                state.goals = state.goals.map(goal =>
+                    goal.id === action.payload.id ? action.payload : goal
+                );
+                state.status = 'succeeded';
             });
     },
 });

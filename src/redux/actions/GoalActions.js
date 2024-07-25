@@ -21,3 +21,35 @@ export const fetchGoalById = createAsyncThunk('goal/fetchGoalById', async ({ id,
     }
     return { id: doc.id, ...doc.data(), id_user };
 });
+
+export const updateGoal = createAsyncThunk('goal/updateGoal', async ({ id_user, newGoal }) => {
+    try {
+        const goalsRef = firestore().collection('Goal');
+        console.log('checkfour', id_user);
+        console.log(newGoal.chức_năng);
+        // Kiểm tra sự tồn tại của mục tiêu dựa vào userId và chức năng
+        const snapshot = await goalsRef.where('id_user', '==', id_user)
+            .where('chức_năng', '==', newGoal.chức_năng)
+            .get();
+
+        if (!snapshot.empty) {
+            // Nếu đã tồn tại mục tiêu, cập nhật mục tiêu đầu tiên tìm thấy
+            const docId = snapshot.docs[0].id;
+            await goalsRef.doc(docId).update(newGoal);
+
+            // Lấy dữ liệu mục tiêu đã cập nhật
+            const updatedGoalDoc = await goalsRef.doc(docId).get();
+            if (!updatedGoalDoc.exists) {
+                throw new Error('Goal update failed, document not found');
+            }
+            return { id: updatedGoalDoc.id, ...updatedGoalDoc.data() };
+        } else {
+            // Nếu không tồn tại mục tiêu, thêm mới mục tiêu
+            const newGoalDoc = await goalsRef.add({ ...newGoal, id_user });
+            return { id: newGoalDoc.id, ...newGoal, id_user };
+        }
+    } catch (error) {
+        console.error('Error updating or adding goal:', error);
+        throw error;
+    }
+});

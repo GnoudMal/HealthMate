@@ -5,10 +5,15 @@ const userSlice = createSlice({
     name: 'user',
     initialState: {
         userInfo: null,
+        id: null,
         loading: false,
         error: null,
     },
-    reducers: {},
+    reducers: {
+        setUserId(state, action) {
+            state.id = action.payload;
+        },
+    },
     extraReducers: (builder) => {
         builder
             .addCase(fetchUserInfo.pending, (state) => {
@@ -40,5 +45,5 @@ const userSlice = createSlice({
             });
     },
 });
-
+export const { setUserId } = userSlice.actions;
 export const { reducer: userReducer } = userSlice;

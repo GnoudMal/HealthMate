@@ -15,6 +15,8 @@ import ProfileScreen from './ProfileScreen';
 import MindScreen from './MindScreen';
 import SleepTracking from './SleepScreen';
 import HealthScreen from './HealthScreen';
+import PhysicalScreen from './PhysicalScreen';
+import MentalHealthScreen from './EntertainmentScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -88,6 +90,9 @@ const RootComponent = () => {
                 <Stack.Screen name="MindScreen" component={MindScreen} />
                 <Stack.Screen name="SleepTracking" component={SleepTracking} />
                 <Stack.Screen name="HealthScreen" component={HealthScreen} />
+                <Stack.Screen name="PhysicalScreen" component={PhysicalScreen} />
+                <Stack.Screen name="MentalHealthScreen" component={MentalHealthScreen} />
+
             </Stack.Navigator>
         </NavigationContainer>
     );

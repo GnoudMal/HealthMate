@@ -112,7 +112,7 @@ const SleepScreen = ({ navigation }) => {
                     .where('createdAt', '<=', endDate)
                     .get();
 
-                const weeklyData = [0, 6, 0, 0, 0, 0, 0]; // Mặc định 0 giờ cho mỗi ngày trong tuần
+                const weeklyData = [0, 0, 0, 0, 0, 0, 0]; // Mặc định 0 giờ cho mỗi ngày trong tuần
 
                 snapshot.docs.forEach(doc => {
                     const data = doc.data();

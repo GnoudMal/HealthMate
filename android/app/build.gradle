@@ -117,6 +117,7 @@ dependencies {
         implementation jscFlavor
     }
     implementation project(':react-native-push-notification')
+      implementation project(':react-native-sensors')
 }
 
 apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)

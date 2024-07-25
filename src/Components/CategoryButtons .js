@@ -28,6 +28,10 @@ const CategoryButtons = ({ navigation }) => {
             navigation.navigate('SleepTracking')
         } else if (label === 'Ăn Uống') {
             navigation.navigate('HealthScreen')
+        } else if (label === 'Thể Chất') {
+            navigation.navigate('PhysicalScreen')
+        } else {
+            navigation.navigate('MentalHealthScreen')
         }
         // Các xử lý điều hướng cho các label khác
     };
