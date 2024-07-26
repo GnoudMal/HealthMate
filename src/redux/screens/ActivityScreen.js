@@ -11,6 +11,8 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import firestore from '@react-native-firebase/firestore';
 import { fetchSteps } from '../actions/stepActions';
 import { useNavigation } from '@react-navigation/native';
+import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
+import LottieView from 'lottie-react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -61,12 +63,70 @@ const CircularProgress = ({ size, strokeWidth, percentage, innerText }) => {
     );
 };
 
+const Summary = ({ stepsCount, goalText, distanceFromTargetSteps, caloriesFromSteps, caloriesFromDistance, handleGoalUpdate, goalReached }) => (
+    <View style={styles.summarySection}>
+        <Text style={styles.summaryTitle}>Summary</Text>
+        <View style={{ marginBottom: 10, alignSelf: 'flex-start' }}>
+            <Text style={styles.calories}>
+                {caloriesFromSteps} <Text style={styles.caloriesLabel}>Kcal - Steps</Text>
+            </Text>
+            <Text style={styles.calories}>
+                {caloriesFromDistance} <Text style={styles.caloriesLabel}>Kcal - Distance</Text>
+            </Text>
+        </View>
+        <CircularProgress
+            size={200}
+            strokeWidth={20}
+            percentage={goalText > 0 ? (stepsCount / goalText) * 100 : 0}
+            innerText={`${Math.round((stepsCount / goalText) * 100)}%`}
+        />
+        <Text style={{ fontSize: 20, color: 'white', alignSelf: 'flex-start', fontWeight: 'bold', marginTop: 10 }}>+ My Target:</Text>
+        <View style={styles.stats}>
+            <View style={styles.statBox}>
+                <Text style={styles.statValue}>{goalText}</Text>
+                <Text style={styles.statLabel}>Steps</Text>
+            </View>
+            <View style={styles.statBox}>
+                <Text style={styles.statValue}>{distanceFromTargetSteps}</Text>
+                <Text style={styles.statLabel}>Distance (KM)</Text>
+            </View>
+        </View>
+        <View style={styles.actionSection}>
+            <TouchableOpacity style={styles.btnUpdateGoal} onPress={() => handleGoalUpdate(1000)} >
+                <Text style={{ fontSize: 16, fontWeight: '700' }}>Update Goal</Text>
+            </TouchableOpacity>
+            <Text style={styles.actionText}>
+                {goalReached ? 'Goal Achieved!' : 'Keep Going!'}
+            </Text>
+        </View>
+    </View>
+);
 
+const Recent = () => (
+    <View style={styles.summarySection}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start' }}>
+            <Icon name="partly-sunny" size={32} color="orange" />
+            <Text style={{ color: 'white', fontSize: 17, fontWeight: '800', marginStart: 5 }}>Có Nắng</Text>
+            <Text style={{ color: 'white', fontSize: 17, fontWeight: '800', marginStart: 5 }}>- 34℃</Text>
+        </View>
+        <Text style={[styles.calories, { alignSelf: 'flex-start' }]}>
+            Hà Nội <Text style={styles.caloriesLabel}>- Phú Đô</Text>
+        </Text>
+        <Text style={{ color: 'white', fontSize: 17, fontWeight: '800', marginTop: 20 }}> Bạn Đang Chạy Với Tốc Độ: 6:30/KM</Text>
+        <LottieView
+            source={require('../../animation/Run2.json')}
+            autoPlay
+            loop
+            style={styles.animation}
+        />
+
+    </View>
+);
 
 const ActivityScreen = () => {
     const stepsObject = useSelector((state) => {
         console.log('Redux steps state:', state.steps);
-        return state.steps;
+        return state.steps.steps;
     });
     const goals = useSelector((state) => state.goal.goals);
     const dispatch = useDispatch();
@@ -79,7 +139,31 @@ const ActivityScreen = () => {
     const [tempHour, setTempHour] = useState(new Date());
     const [tempMinute, setTempMinute] = useState(new Date());
 
+
     const navigation = useNavigation();
+
+    const [index, setIndex] = useState(0);
+    const [routes] = useState([
+        { key: 'summary', title: 'Summary' },
+        { key: 'another', title: 'Activity' },
+    ]);
+
+    const renderScene = SceneMap({
+        summary: () => (
+            <Summary
+                stepsCount={stepsCount}
+                goalText={goalText}
+                distanceFromTargetSteps={distanceFromTargetSteps}
+                caloriesFromSteps={caloriesFromSteps}
+                caloriesFromDistance={caloriesFromDistance}
+                handleGoalUpdate={handleGoalUpdate}
+                goalReached={goalReached}
+            />
+        ),
+        another: () => (
+            <Recent />
+        ),
+    });
 
     useEffect(() => {
         configureNotifications();
@@ -89,7 +173,7 @@ const ActivityScreen = () => {
                 if (id !== null) {
                     setUserId(id);
                     dispatch(fetchGoals(id));
-                    dispatch(fetchSteps(id));
+                    // dispatch(fetchSteps(id));
                 } else {
                     console.warn('No userId found in AsyncStorage');
                 }
@@ -250,6 +334,15 @@ const ActivityScreen = () => {
         }
     };
 
+
+    const renderTabBar = props => (
+        <TabBar
+            {...props}
+            style={{ backgroundColor: '#272244', borderTopEndRadius: 20, borderTopStartRadius: 20 }} // Màu nền của tab bar
+            indicatorStyle={{ backgroundColor: 'yellow' }} // Màu của chỉ báo tab hiện tại
+            labelStyle={{ color: 'white' }} // Màu chữ của các tab
+        />
+    );
     // console.log(stepsCount);
     // console.log(goalText);
 
@@ -277,42 +370,13 @@ const ActivityScreen = () => {
                     </View>
                 </View>
 
-                <View style={styles.summarySection}>
-                    <Text style={styles.summaryTitle}>Summary</Text>
-                    <View style={{ marginBottom: 10, alignSelf: 'flex-start' }}>
-                        <Text style={styles.calories}>
-                            {caloriesFromSteps} <Text style={styles.caloriesLabel}>Kcal - Steps</Text>
-                        </Text>
-                        <Text style={styles.calories}>
-                            {caloriesFromDistance} <Text style={styles.caloriesLabel}>Kcal - Distance</Text>
-                        </Text>
-                    </View>
-                    <CircularProgress
-                        size={200}
-                        strokeWidth={20}
-                        percentage={goalText > 0 ? (stepsCount / goalText) * 100 : 0}
-                        innerText={`${Math.round((stepsCount / goalText) * 100)}%`}
-                    />
-                    <Text style={{ fontSize: 20, color: 'white', alignSelf: 'flex-start', fontWeight: 'bold', marginTop: 10 }}>+ My Target:</Text>
-                    <View style={styles.stats}>
-                        <View style={styles.statBox}>
-                            <Text style={styles.statValue}>{goalText}</Text>
-                            <Text style={styles.statLabel}>Steps</Text>
-                        </View>
-                        <View style={styles.statBox}>
-                            <Text style={styles.statValue}>{distanceFromTargetSteps}</Text>
-                            <Text style={styles.statLabel}>Distance (KM)</Text>
-                        </View>
-                    </View>
-                    <View style={styles.actionSection}>
-                        <TouchableOpacity style={styles.btnUpdateGoal} onPress={() => handleGoalUpdate(1000)} >
-                            <Text style={{ fontSize: 16, fontWeight: '700' }}>Update Goal</Text>
-                        </TouchableOpacity>
-                        <Text style={styles.actionText}>
-                            {goalReached ? 'Goal Achieved!' : 'Keep Going!'}
-                        </Text>
-                    </View>
-                </View>
+                <TabView
+                    renderTabBar={renderTabBar}
+                    navigationState={{ index, routes }}
+                    renderScene={renderScene}
+                    onIndexChange={setIndex}
+                    initialLayout={{ width: Dimensions.get('window').width }}
+                />
                 {showDatePicker && (
                     <DateTimePicker
                         value={selectedDate}
@@ -356,6 +420,10 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         marginBottom: 16,
         marginRight: 10
+    },
+    animation: {
+        width: '100%',
+        height: 500,
     },
     btnNotify: {
         padding: 7,
@@ -403,7 +471,7 @@ const styles = StyleSheet.create({
     },
     summarySection: {
         backgroundColor: '#272244',
-        borderRadius: 10,
+        borderBottomEndRadius: 10,
         padding: 24,
         alignItems: 'center',
     },
@@ -473,7 +541,12 @@ const styles = StyleSheet.create({
         padding: 12,
         borderRadius: 15,
         backgroundColor: '#FCA703'
-    }
+    },
+    anotherView: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
 });
 
 export default ActivityScreen;

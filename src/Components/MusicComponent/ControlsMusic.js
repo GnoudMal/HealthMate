@@ -7,6 +7,7 @@ import TrackPlayer, {
     State
 } from 'react-native-track-player';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import Icon2 from 'react-native-vector-icons/Feather';
 
 function Controls({ onShuffle }) {
     const playerState = usePlaybackState();
@@ -21,25 +22,25 @@ function Controls({ onShuffle }) {
     return (
         <View style={{
             flexDirection: 'row',
-            flexWrap: 'wrap', alignItems: 'center'
+            flexWrap: 'wrap', alignItems: 'center', marginBottom: 14,
         }}>
-            <Icon.Button
-                name="arrow-left"
-                size={28}
+            <Icon2.Button
+                name="skip-back"
+                size={20}
                 backgroundColor="transparent"
-                color="red"
+                color="white"
                 onPress={() => TrackPlayer.skipToPrevious()} />
-            <Icon.Button
+            <Icon2.Button
                 name={playerState.state == State.Playing ? 'pause' : 'play'}
-                size={28}
+                size={24}
                 backgroundColor="transparent"
-                color="blue"
+                color="black"
                 onPress={handlePlayPress} />
-            <Icon.Button
-                name="arrow-right"
-                size={28}
+            <Icon2.Button
+                name="skip-forward"
+                size={20}
                 backgroundColor="transparent"
-                color="red"
+                color="white"
                 onPress={() => TrackPlayer.skipToNext()} />
         </View>
     );
@@ -47,4 +48,6 @@ function Controls({ onShuffle }) {
 
 export default Controls
 
-const styles = StyleSheet.create({})
+const styles = StyleSheet.create({
+
+})

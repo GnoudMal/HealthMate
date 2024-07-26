@@ -10,22 +10,28 @@ function TrackProgress() {
         return `${mins}:${secs}`;
     }
 
-    console.log(format(position));
-    console.log(duration);
+    // console.log(format(position));
+    // console.log(duration);
 
     return (
-        <View style={{ alignItems: 'center' }}>
+        <View style={{ alignItems: 'center', justifyContent: "center", flexDirection: "row" }}>
             <Text style={styles.trackProgress}>
-                {format(position)} / {format(duration)}
+                {format(position)}
             </Text>
             <Slider
-                style={{ width: 200, height: 40 }}
+                style={{ width: 250 }}
+
                 minimumValue={0}
                 maximumValue={duration}
-                minimumTrackTintColor="blue"
-                maximumTrackTintColor="red"
+                minimumTrackTintColor="#FC9CB5"
+                thumbTintColor="#FFFFFF"
+
+                maximumTrackTintColor="#393636"
                 value={position}
             />
+            <Text style={styles.trackProgress}>
+                {format(duration)}
+            </Text>
         </View>
     );
 }
@@ -34,10 +40,11 @@ export default TrackProgress;
 
 const styles = StyleSheet.create({
     trackProgress: {
-        marginTop: 40,
+        // marginTop: 10,
         textAlign: 'center',
-        fontSize: 24,
-        color: 'black'
+        fontSize: 16,
+        color: '#FFFFFF',
+        fontWeight: '700',
     },
 });
 

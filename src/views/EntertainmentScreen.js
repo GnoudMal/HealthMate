@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
     View,
     Text,
@@ -7,52 +7,103 @@ import {
     ImageBackground,
     TouchableOpacity,
     ActivityIndicator,
-    FlatList
+    FlatList,
+    Modal,
+    TextInput,
+    Button
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
-import TrackPlayer, {
-    useTrackPlayerEvents,
-    usePlaybackState,
-    useProgress,
-    Event,
-    State
-} from 'react-native-track-player';
+import TrackPlayer from 'react-native-track-player';
 import { addTracks, setupPlayer } from '../service/servicePlay';
 import Playlist from '../Components/MusicComponent/playList';
 import Header from '../Components/MusicComponent/HeaderMusic';
 import TrackProgress from '../Components/MusicComponent/TrackProgress';
+import Controls from '../Components/MusicComponent/ControlsMusic';
+import { Provider, useDispatch } from 'react-redux';
+import { addTrackToFirebase } from '../redux/reducers/trackReducer'; // Import action từ Redux slice
+import { fetchTracksFromFirebase } from '../service/firebaseService';
+import store from '../redux/store/store';
+import { useNavigation } from '@react-navigation/native';
 
 const MentalHealthScreen = () => {
     const [isPlayerReady, setIsPlayerReady] = useState(false);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [title, setTitle] = useState('');
+    const [genre, setGenre] = useState('');
+    const [url, setUrl] = useState('');
+    const [userId, setUserId] = useState('');
+    const dispatch = useDispatch();
+    const navigation = useNavigation();
 
     useEffect(() => {
         async function setup() {
+            console.log('Initializing player...');
             let isSetup = await setupPlayer();
-            const queue = await TrackPlayer.getQueue();
-            if (isSetup && queue.length <= 0) {
-                await addTracks();
+            if (isSetup) {
+                const queue = await TrackPlayer.getQueue();
+                if (queue.length === 0) {
+                    await addTracks();
+                }
+                setIsPlayerReady(true);
+            } else {
+                console.error('Failed to setup TrackPlayer');
+                setIsPlayerReady(false);
             }
-            setIsPlayerReady(isSetup);
         }
         setup();
     }, []);
 
+    const handleAddTrack = useCallback(async () => {
+        if (!title || !genre || !url || !userId) {
+            console.error('Please fill all fields');
+            return;
+        }
+
+        try {
+            // Lấy các bài hát hiện có và xác định id tiếp theo
+            const tracks = await fetchTracksFromFirebase();
+            const newId = (Date.now() + Math.floor(Math.random() * 1000)).toString();
+
+            console.log(newId);
+
+            const newTrack = { id: newId, title, genre, url };
+
+            // Lưu bài hát mới vào Firebase
+            await dispatch(addTrackToFirebase({ track: newTrack, userId }));
+            // Cập nhật TrackPlayer với bài hát mới
+
+            setModalVisible(false);
+            setTitle('');
+            setGenre('');
+            setUrl('');
+            setUserId('');
+
+            console.log('Track added successfully');
+        } catch (error) {
+            console.error('Error adding track or fetching tracks:', error);
+        }
+    }, [dispatch, title, genre, url, userId]);
+
+
     if (!isPlayerReady) {
         return (
-            <SafeAreaView style={styles.container}>
+            <SafeAreaView style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#bbb" />
             </SafeAreaView>
         );
     }
 
-    const renderItem = ({ item }) => (
+    const renderItem = () => (
         <View style={styles.contentContainer}>
             <View style={styles.header}>
-                <TouchableOpacity style={styles.backButton}>
+                <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
                     <Icon name="arrow-back" size={24} color="black" />
                 </TouchableOpacity>
                 <Text style={styles.title}>TINH THẦN</Text>
+                <TouchableOpacity style={styles.addTrackButton} onPress={() => setModalVisible(true)}>
+                    <Icon name='add' size={26} color='black' />
+                </TouchableOpacity>
             </View>
 
             <View style={styles.imageContainer}>
@@ -61,10 +112,13 @@ const MentalHealthScreen = () => {
                     style={styles.imageBackground}
                     imageStyle={styles.imageBackgroundImage}
                 >
+                    <Header />
                     <Image
                         source={require('../images/Thien.png')}
                         style={styles.image}
                     />
+                    <TrackProgress />
+                    <Controls />
                 </ImageBackground>
             </View>
 
@@ -72,21 +126,21 @@ const MentalHealthScreen = () => {
                 Thiền định không phải là chạy trốn khỏi thế giới, mà là trở về với chính mình.
             </Text>
 
-            <Header />
-            <TrackProgress />
-            <Playlist />
+            <Provider store={store}>
+                <Playlist />
+            </Provider>
 
             <View style={styles.playlist}>
                 <Text style={styles.playlistTitle}>Workout with experts:</Text>
                 <View style={styles.expertContainer}>
-                    <TouchableOpacity style={styles.expertCard}>
+                    <TouchableOpacity style={styles.expertCard} onPress={() => navigation.navigate('YogaList')}>
                         <Image
                             source={require('../images/Yoga.png')}
                             style={styles.expertImage}
                         />
                         <Text style={styles.expertText}>Yoga</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.expertCard}>
+                    <TouchableOpacity style={styles.expertCard} onPress={() => navigation.navigate('MeditationList')}>
                         <Image
                             source={require('../images/Meditation.jpg')}
                             style={styles.expertImage}
@@ -95,13 +149,52 @@ const MentalHealthScreen = () => {
                     </TouchableOpacity>
                 </View>
             </View>
+
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={modalVisible}
+                onRequestClose={() => setModalVisible(false)}
+            >
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Add New Track</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Title"
+                            value={title}
+                            onChangeText={setTitle}
+                        />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Genre"
+                            value={genre}
+                            onChangeText={setGenre}
+                        />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Video/Audio Link"
+                            value={url}
+                            onChangeText={setUrl}
+                        />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="User ID"
+                            value={userId}
+                            onChangeText={setUserId}
+                        />
+                        <Button title="Add Track" onPress={handleAddTrack} />
+                        <Button title="Cancel" onPress={() => setModalVisible(false)} color="red" />
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 
     return (
         <SafeAreaView style={styles.container}>
             <FlatList
-                data={[{}]} // Dữ liệu giả, vì không có dữ liệu thực để hiển thị
+                data={[{}]}
                 keyExtractor={(item, index) => index.toString()}
                 renderItem={renderItem}
             />
@@ -115,6 +208,11 @@ const styles = StyleSheet.create({
         backgroundColor: '#F5F5F5',
         padding: 16,
     },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     contentContainer: {
         flex: 1,
     },
@@ -125,8 +223,15 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     backButton: {
-        padding: 7,
         borderRadius: 8,
+        padding: 7,
+        marginBottom: 16,
+        marginRight: 10
+    },
+    addTrackButton: {
+        padding: 7,
+        marginBottom: 16,
+
     },
     title: {
         color: 'black',
@@ -156,18 +261,12 @@ const styles = StyleSheet.create({
         width: 236,
         height: 232,
         borderRadius: 16,
+        marginBottom: 25
     },
     quote: {
         fontSize: 16,
         color: '#333',
         textAlign: 'center',
-        marginVertical: 16,
-    },
-    playButton: {
-        backgroundColor: '#FF6347',
-        padding: 16,
-        borderRadius: 30,
-        alignSelf: 'center',
         marginVertical: 16,
     },
     playlist: {
@@ -196,20 +295,38 @@ const styles = StyleSheet.create({
     },
     expertImage: {
         width: '100%',
-        height: 150,
+        height: 120,
         borderRadius: 16,
-        marginBottom: 8,
     },
     expertText: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#333',
+        marginTop: 8,
     },
-    trackProgress: {
-        marginTop: 40,
-        textAlign: 'center',
-        fontSize: 24,
-        color: '#eee'
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+        width: '80%',
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: 16,
+        alignItems: 'center',
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 16,
+    },
+    input: {
+        width: '100%',
+        padding: 10,
+        marginBottom: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#ccc',
     },
 });
 

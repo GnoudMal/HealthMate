@@ -18,7 +18,7 @@ function Header() {
         setInfo(info);
     }
     return (
-        <View>
+        <View style={{ alignSelf: "flex-start", marginStart: 15 }}>
             <Text style={styles.songTitle}>{info.title}</Text>
             <Text style={styles.artistName}>{info.artist}</Text>
         </View>
@@ -29,12 +29,14 @@ export default Header;
 
 const styles = StyleSheet.create({
     songTitle: {
-        fontSize: 32,
-        marginTop: 50,
-        color: '#ccc'
+        fontSize: 20,
+        marginTop: 20,
+        fontWeight: 'bold',
+        color: 'black'
     },
     artistName: {
-        fontSize: 24,
-        color: '#888'
+        fontSize: 16,
+        color: 'black',
+        fontWeight: "500",
     },
 });

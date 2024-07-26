@@ -3,13 +3,15 @@ import gratitudeReducer from '../reducers/gratidudeReducer';
 import { userReducer } from '../reducers/userReducer';
 import stepsReducer from '../reducers/stepsReducer';
 import goalReducer from '../reducers/goalReducer';
+import trackReducer from '../reducers/trackReducer';
 
 const store = configureStore({
     reducer: {
         gratitude: gratitudeReducer,
         user: userReducer,
         steps: stepsReducer,
-        goal: goalReducer
+        goal: goalReducer,
+        track: trackReducer
     },
 });
 

@@ -17,6 +17,8 @@ import SleepTracking from './SleepScreen';
 import HealthScreen from './HealthScreen';
 import PhysicalScreen from './PhysicalScreen';
 import MentalHealthScreen from './EntertainmentScreen';
+import YogaList from './YogaList';
+import MeditationList from './MeditationList';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -92,6 +94,8 @@ const RootComponent = () => {
                 <Stack.Screen name="HealthScreen" component={HealthScreen} />
                 <Stack.Screen name="PhysicalScreen" component={PhysicalScreen} />
                 <Stack.Screen name="MentalHealthScreen" component={MentalHealthScreen} />
+                <Stack.Screen name="YogaList" component={YogaList} />
+                <Stack.Screen name="MeditationList" component={MeditationList} />
 
             </Stack.Navigator>
         </NavigationContainer>
@@ -130,4 +134,5 @@ const styles = StyleSheet.create({
         elevation: 10,
         marginBottom: 10,
     },
+    
 });
