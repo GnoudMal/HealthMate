@@ -5,7 +5,8 @@ import {
     Text,
     View,
     FlatList,
-    TouchableOpacity
+    TouchableOpacity,
+    Image
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import TrackPlayer, {
@@ -34,12 +35,14 @@ function Playlist() {
             url: 'https://a128-z3.zmdcdn.me/5734ce7b87678872801d6008a6e13003?authen=exp=1722164038~acl=/5734ce7b87678872801d6008a6e13003/*~hmac=a7784073fc26f6e51ce92ecf90b1fd4d',
             title: 'Track 1',
             artist: 'Artist 1',
+            imageUri: 'https://tranhgotreotuong.com/wp-content/uploads/2019/08/Ch%E1%BB%AF-T%C3%A2m-trong-th%C6%B0-ph%C3%A1p-th%E1%BB%83-hi%E1%BB%87n-%E1%BB%9F-gi%C3%A1-tr%E1%BB%8B-ngh%E1%BB%87-thu%E1%BA%ADt.jpg'
         },
         {
             id: 'ex2',
             url: 'https://a128-z3.zmdcdn.me/f7e0fbbd9c317640bbffde7bf93e6d56?authen=exp=1722164405~acl=/f7e0fbbd9c317640bbffde7bf93e6d56/*~hmac=5053aaf551d7d80fa22aae5c8a1242c0',
             title: 'Track 2',
             artist: 'Artist 2',
+            imageUri: 'https://tranhgotreotuong.com/wp-content/uploads/2019/08/Ch%E1%BB%AF-T%C3%A2m-trong-th%C6%B0-ph%C3%A1p-th%E1%BB%83-hi%E1%BB%87n-%E1%BB%9F-gi%C3%A1-tr%E1%BB%8B-ngh%E1%BB%87-thu%E1%BA%ADt.jpg'
         },
     ];
 
@@ -86,7 +89,8 @@ function Playlist() {
         }
     });
 
-    function PlaylistItem({ index, title, isCurrent, artist }) {
+    function PlaylistItem({ index, title, isCurrent, artist, image }) {
+        console.log(image);
         async function handleItemPress() {
             try {
                 if (index !== null) {
@@ -107,17 +111,26 @@ function Playlist() {
                     borderRadius: 4,
                     paddingVertical: 4,
                     paddingHorizontal: 8,
+                    flexDirection: 'row',
+                    alignItems: 'flex-start'
                 }}>
-                <Text
-                    style={{
-                        ...styles.playlistItem,
-                        color: isCurrent ? 'white' : 'black',
-                    }}>
-                    {title}
-                </Text>
-                <Text style={{ ...styles.txtArtist, color: isCurrent ? 'white' : 'black' }}>
-                    {artist}
-                </Text>
+                <Image
+                    source={{ uri: image }}
+                    style={styles.selectedImage}
+                />
+                <View>
+                    <Text
+                        style={{
+                            ...styles.playlistItem,
+                            color: isCurrent ? 'white' : 'black',
+                        }}>
+                        {title}
+                    </Text>
+                    <Text style={{ ...styles.txtArtist, color: isCurrent ? 'white' : 'black' }}>
+                        {artist}
+                    </Text>
+                </View>
+
             </TouchableOpacity>
         );
     }
@@ -134,6 +147,7 @@ function Playlist() {
                         index={index}
                         title={item.title}
                         artist={item.artist}
+                        image={item.imageUri}
                         isCurrent={currentTrack === index}
                     />
                 )}
@@ -161,6 +175,14 @@ const styles = StyleSheet.create({
         borderRadius: 4,
         color: '#1E1E1E',
         fontWeight: '800'
+    },
+    selectedImage: {
+        marginRight: 5,
+        width: 60,
+        height: 60,
+        borderRadius: 8,
+        marginTop: 8,
+        marginBottom: 16,
     },
     txtArtist: {
         color: '#1E1E1E',

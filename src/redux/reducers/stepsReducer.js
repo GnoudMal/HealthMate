@@ -41,9 +41,9 @@ const stepSlice = createSlice({
             .addCase(updateStepsInFirestore.fulfilled, (state, action) => {
                 const { updatedSteps } = action.payload;
                 state.steps = updatedSteps;
-            })
-            .addCase(updateSteps.fulfilled, (state, action) => {
-                state.steps = action.payload;
+            }).
+            addCase(updateSteps.fulfilled, (state, action) => {
+                state.steps = action.payload.steps; // Nếu payload chứa `steps`
             });
     },
 });

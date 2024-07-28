@@ -5,6 +5,7 @@ import firestore from '@react-native-firebase/firestore';
 export const fetchGoals = createAsyncThunk('goal/fetchGoals', async (id_user) => {
     const snapshot = await firestore().collection('Goal').where('id_user', '==', id_user).get();
     const goals = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    console.log('da o day', goals);
     return goals;
 });
 

@@ -3,10 +3,12 @@ import firestore from '@react-native-firebase/firestore';
 
 export const fetchUserInfo = createAsyncThunk('user/fetchUserInfo', async (userId) => {
     const userDoc = await firestore().collection('Users').doc(userId).get();
+    console.log('check user fetch:', userDoc);
     if (!userDoc.exists) {
         throw new Error('User not found');
         console.log('dm ko tim thay');
     }
+    console.log('check userinfo', userDoc);
     return { id: userDoc.id, ...userDoc.data() };
 });
 

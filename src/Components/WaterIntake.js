@@ -3,7 +3,36 @@ import { View, Text, StyleSheet } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 
 const WaterIntakeComponent = () => {
-    const progressPercentage = 70;
+    const calculateProgressPercentage = () => {
+        const now = new Date();
+        const currentHour = now.getHours();
+
+        const timeSlots = [
+            { start: 6, end: 8, amount: 600 },
+            { start: 9, end: 11, amount: 500 },
+            { start: 11, end: 14, amount: 1000 },
+            { start: 14, end: 16, amount: 700 },
+            { start: 16, end: 24, amount: 900 }
+        ];
+
+        let totalAmount = 0;
+        let consumedAmount = 0;
+
+        timeSlots.forEach(slot => {
+            totalAmount += slot.amount;
+            if (currentHour >= slot.start && currentHour < slot.end) {
+                const hoursInSlot = slot.end - slot.start;
+                const hoursConsumed = currentHour - slot.start;
+                consumedAmount += slot.amount * (hoursConsumed / hoursInSlot);
+            } else if (currentHour >= slot.end) {
+                consumedAmount += slot.amount;
+            }
+        });
+
+        return (consumedAmount / totalAmount) * 100;
+    };
+
+    const progressPercentage = calculateProgressPercentage();
 
     return (
         <View style={styles.container}>

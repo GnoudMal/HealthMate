@@ -34,7 +34,6 @@ const userSlice = createSlice({
             })
             .addCase(updateUserInfo.fulfilled, (state, action) => {
                 state.loading = false;
-                // Update the user info in the state with the new values
                 if (state.userInfo && state.userInfo.id === action.payload.id) {
                     state.userInfo = { ...state.userInfo, ...action.payload };
                 }
@@ -45,5 +44,7 @@ const userSlice = createSlice({
             });
     },
 });
+
 export const { setUserId } = userSlice.actions;
-export const { reducer: userReducer } = userSlice;
+export const userReducer = userSlice.reducer;
+export default userReducer;

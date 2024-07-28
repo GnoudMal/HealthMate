@@ -1,9 +1,10 @@
 import { configureStore } from '@reduxjs/toolkit';
 import gratitudeReducer from '../reducers/gratidudeReducer';
-import { userReducer } from '../reducers/userReducer';
 import stepsReducer from '../reducers/stepsReducer';
 import goalReducer from '../reducers/goalReducer';
 import trackReducer from '../reducers/trackReducer';
+import userReducer from '../reducers/userReducer';
+import ConsultantReducer from '../reducers/ConsultantReducer';
 
 const store = configureStore({
     reducer: {
@@ -11,7 +12,8 @@ const store = configureStore({
         user: userReducer,
         steps: stepsReducer,
         goal: goalReducer,
-        track: trackReducer
+        track: trackReducer,
+        consultants: ConsultantReducer,
     },
 });
 

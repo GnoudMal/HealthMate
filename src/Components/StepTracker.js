@@ -67,7 +67,7 @@ const StepTracker = () => {
         }
 
         const averageMagnitude = buffer.reduce((a, b) => a + b) / buffer.length;
-        const threshold = 1.0;
+        const threshold = 10.0;
 
         return averageMagnitude > threshold ? 1 : 0;
     };

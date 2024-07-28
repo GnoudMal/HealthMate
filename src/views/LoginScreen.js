@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ImageBackground, KeyboardAvoidingView, Platform, ScrollView, Animated, Alert, Modal, Pressable } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ImageBackground, KeyboardAvoidingView, Platform, ScrollView, Animated, Alert, Modal, Pressable, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
@@ -15,9 +15,27 @@ const LoginAccount = ({ navigation, route }) => {
     const [yPosition] = useState(new Animated.Value(100));
     const [modalVisible, setModalVisible] = useState(false);
     const [modalMessage, setModalMessage] = useState('');
+    const [loading, setLoading] = useState(false);
     const dispatch = useDispatch();
 
     useEffect(() => {
+        const checkRememberedUser = async () => {
+            const token = await AsyncStorage.getItem('userToken');
+            if (token) {
+                // Get user info from Firestore using the token
+                const userDocument = await firestore().collection('Users').doc(token).get();
+                if (userDocument.exists) {
+                    console.log('token check' + token);
+                    const userData = userDocument.data();
+                    await AsyncStorage.setItem('userInfo', JSON.stringify(userData));
+                    dispatch(setUserId(token));
+                    navigation.navigate('HomeScreen');
+                }
+            }
+        };
+
+        checkRememberedUser();
+
         if (route.params?.email && route.params?.password) {
             setEmail(route.params.email);
             setPassword(route.params.password);
@@ -30,7 +48,7 @@ const LoginAccount = ({ navigation, route }) => {
                 useNativeDriver: true,
             }
         ).start();
-    }, [route.params]);
+    }, [route.params, dispatch, navigation]);
 
     const toggleSecureEntry = () => {
         setSecureTextEntry(!secureTextEntry);
@@ -47,35 +65,41 @@ const LoginAccount = ({ navigation, route }) => {
             return;
         }
 
+        setLoading(true);
+
         try {
             const userCredential = await auth().signInWithEmailAndPassword(email, password);
             const user = userCredential.user;
+            console.log(user.uid);
 
             const userDocument = await firestore().collection('Users').doc(user.uid).get();
-            console.log('id first', user.uid);
             if (userDocument.exists) {
                 const userData = userDocument.data();
                 if (userData.username && userData.gender && userData.height && userData.weight) {
                     setModalMessage(`Đăng nhập thành công, chào mừng ${user.email}`);
-                    console.log(userData);
+                    console.log('Đăng nhập thành công:', user.uid);
+                    console.log('Dữ liệu người dùng:', userData);
+
                     await AsyncStorage.setItem('userInfo', JSON.stringify(userData));
                     await AsyncStorage.setItem('userId', user.uid);
-                    console.log('check2', JSON.stringify(userData));
-                    console.log('check3', user.uid);
+                    console.log('id reg', user.uid);
+                    if (rememberMe) {
+                        await AsyncStorage.setItem('userToken', user.uid);
+                        console.log('done Token');
+                    } else {
+                        await AsyncStorage.removeItem('userToken');
+                    }
 
-                    // dispatch(setUserId(user.uid))
-                    //     .then(() => {
-                    //         // Điều hướng sau khi dispatch thành công
-                    //         navigation.navigate('HomeScreen');
-                    //     })
-                    //     .catch(error => {
-                    //         // Xử lý lỗi khi dispatch không thành công
-                    //         console.error('Dispatch error:', error);
-                    //         setModalMessage('Đã xảy ra lỗi khi cập nhật thông tin người dùng.');
-                    //         setModalVisible(true);
-                    //     });
-
-                    navigation.navigate('HomeScreen');
+                    // Dispatch và kiểm tra lỗi
+                    try {
+                        await dispatch(setUserId(user.uid));
+                        setModalVisible(true);
+                        navigation.navigate('HomeScreen');
+                    } catch (dispatchError) {
+                        console.error('Dispatch error:', dispatchError);
+                        setModalMessage('Đã xảy ra lỗi khi cập nhật thông tin người dùng.');
+                        setModalVisible(true);
+                    }
                 } else {
                     navigation.navigate('AdditionalInfoScreen');
                 }
@@ -84,36 +108,31 @@ const LoginAccount = ({ navigation, route }) => {
             }
         } catch (error) {
             switch (error.code) {
-                case 'auth/network-request-failed': {
+                case 'auth/network-request-failed':
                     setModalMessage('Có vấn đề về mạng và đường truyền.');
-                    console.log(error.code);
+                    setLoading(false);
                     break;
-                }
-                case 'auth/invalid-email': {
+                case 'auth/invalid-email':
                     setModalMessage('Địa chỉ email không hợp lệ.');
-                    console.log(error.code);
                     break;
-                }
-                case 'auth/user-not-found': {
+                case 'auth/user-not-found':
                     setModalMessage('Tài khoản không tồn tại.');
-                    console.log(error.code);
                     break;
-                }
-                case 'auth/wrong-password': {
+                case 'auth/wrong-password':
                     setModalMessage('Mật khẩu không chính xác.');
-                    console.log(error.code);
                     break;
-                }
-                default: {
+                default:
                     setModalMessage('Đã xảy ra lỗi không xác định.');
-                    console.log('error', error.code);
+                    console.log(error.code);
+                    setLoading(false);
                     break;
-                }
             }
         } finally {
+            setLoading(false);
             setModalVisible(true);
         }
     };
+
 
     const handleForgotPassword = async () => {
         if (!email) {
@@ -255,6 +274,11 @@ const LoginAccount = ({ navigation, route }) => {
                         </View>
                     </View>
                 </Modal>
+                {loading && (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color="#FFA500" />
+                    </View>
+                )}
             </ScrollView>
         </KeyboardAvoidingView>
     );
@@ -432,6 +456,16 @@ const styles = StyleSheet.create({
     forgotPasswordText: {
         color: '#AFC18E',
         fontSize: 16,
+    },
+    loadingContainer: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
     },
 });
 

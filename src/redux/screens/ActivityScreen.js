@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, Button, StyleSheet, Dimensions, TouchableOpacity, ScrollView } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { addGoalToFirestore, fetchGoals, updateGoal } from '../actions/GoalActions';
@@ -13,6 +13,8 @@ import { fetchSteps } from '../actions/stepActions';
 import { useNavigation } from '@react-navigation/native';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import LottieView from 'lottie-react-native';
+import _ from 'lodash';
+import StepTracker from '../../Components/StepTracker';
 
 const { width } = Dimensions.get('window');
 
@@ -126,7 +128,7 @@ const Recent = () => (
 const ActivityScreen = () => {
     const stepsObject = useSelector((state) => {
         console.log('Redux steps state:', state.steps);
-        return state.steps.steps;
+        return state.steps;
     });
     const goals = useSelector((state) => state.goal.goals);
     const dispatch = useDispatch();
@@ -138,6 +140,7 @@ const ActivityScreen = () => {
     const [notificationTime, setNotificationTime] = useState({ hour: 0, minute: 0 });
     const [tempHour, setTempHour] = useState(new Date());
     const [tempMinute, setTempMinute] = useState(new Date());
+    const [isTracking, setIsTracking] = useState(false);
 
 
     const navigation = useNavigation();
@@ -151,7 +154,7 @@ const ActivityScreen = () => {
     const renderScene = SceneMap({
         summary: () => (
             <Summary
-                stepsCount={stepsCount}
+                stepsCount={stepsObject.steps}
                 goalText={goalText}
                 distanceFromTargetSteps={distanceFromTargetSteps}
                 caloriesFromSteps={caloriesFromSteps}
@@ -165,15 +168,30 @@ const ActivityScreen = () => {
         ),
     });
 
+    console.log('steps check', stepsObject.steps);
+
+    const fetchStepsData = useCallback(
+        _.debounce(async (userId) => {
+            try {
+                await dispatch(fetchSteps(userId));
+            } catch (error) {
+                console.error('Error fetching steps:', error);
+            }
+        }, 1000), // Adjust the debounce delay as needed
+        [dispatch]
+    );
+
     useEffect(() => {
         configureNotifications();
         const getUserId = async () => {
             try {
                 const id = await AsyncStorage.getItem('userId');
+                console.log('id user', id);
                 if (id !== null) {
                     setUserId(id);
+
                     dispatch(fetchGoals(id));
-                    // dispatch(fetchSteps(id));
+                    fetchStepsData(id);
                 } else {
                     console.warn('No userId found in AsyncStorage');
                 }
@@ -183,14 +201,12 @@ const ActivityScreen = () => {
         };
 
         getUserId();
-    }, [dispatch]);
+    }, [dispatch, fetchStepsData]);
 
     useEffect(() => {
-        console.log('checklord', stepsObject);
-        if (stepsObject) {
-            console.log('Updated stepsObject:', stepsObject);
-            setGoalReached(stepsObject.steps >= currentGoal.mục_tiêu);
-        }
+        console.log('Updated stepsObject:', stepsObject);
+        const steps = typeof stepsObject.steps === 'number' ? stepsObject.steps : stepsObject.steps.steps;
+        setGoalReached(steps >= currentGoal.mục_tiêu);
     }, [stepsObject, currentGoal.mục_tiêu]);
 
     const configureNotifications = () => {
@@ -246,9 +262,10 @@ const ActivityScreen = () => {
                 .then(() => console.log('Goal updated successfully'))
                 .catch(error => console.error('Error updating goal:', error));
         } else {
+            console.log('goal check', newGoalValue);
             const newGoalData = {
                 chức_năng: 'Activity',
-                mục_tiêu: newGoal,
+                mục_tiêu: newGoalValue,
                 đơn_vị: 'Bước',
                 ngày_bắt_đầu: startDate,
                 ngày_kết_thúc: endDate.toISOString(),
@@ -261,12 +278,9 @@ const ActivityScreen = () => {
         }
     };
 
-
-
-    const stepsCount = stepsObject && typeof stepsObject.steps === 'number' ? stepsObject.steps : 'N/A';
     const goalText = typeof currentGoal.mục_tiêu === 'number' ? currentGoal.mục_tiêu : 'N/A';
 
-    console.log('day a', stepsObject.steps);
+    console.log('day a', stepsObject);
     // console.log(stepsCount);
 
     const calculateCalories = (steps, distance) => {
@@ -290,10 +304,14 @@ const ActivityScreen = () => {
         return distanceKilometers.toFixed(2);
     };
 
+    console.log('check lt', stepsCount);
+
+
+    const stepsCount = stepsObject && typeof stepsObject.steps === 'number' ? stepsObject.steps : stepsObject.steps.steps;
     const distanceToday = calculateDistanceFromSteps(stepsCount);
+    const { caloriesFromSteps, caloriesFromDistance } = calculateCalories(stepsCount, distanceToday);
     const distanceFromTargetSteps = calculateDistanceFromSteps(goalText);
 
-    const { caloriesFromSteps, caloriesFromDistance } = calculateCalories(stepsCount, distanceToday);
 
     const scheduleNotification = (hour, minute) => {
         const now = new Date();
@@ -343,6 +361,15 @@ const ActivityScreen = () => {
             labelStyle={{ color: 'white' }} // Màu chữ của các tab
         />
     );
+
+    const startTracking = () => {
+        setIsTracking(true);
+    };
+
+    const stopTracking = () => {
+        setIsTracking(false);
+    };
+
     // console.log(stepsCount);
     // console.log(goalText);
 
@@ -377,6 +404,11 @@ const ActivityScreen = () => {
                     onIndexChange={setIndex}
                     initialLayout={{ width: Dimensions.get('window').width }}
                 />
+                <TouchableOpacity onPress={isTracking ? stopTracking : startTracking} style={styles.trackButton}>
+                    <Text style={styles.trackButtonText}>{isTracking ? 'Stop' : 'Start'}</Text>
+                </TouchableOpacity>
+                {isTracking && <StepTracker />}
+
                 {showDatePicker && (
                     <DateTimePicker
                         value={selectedDate}
@@ -472,6 +504,7 @@ const styles = StyleSheet.create({
     summarySection: {
         backgroundColor: '#272244',
         borderBottomEndRadius: 10,
+        borderBottomStartRadius: 10,
         padding: 24,
         alignItems: 'center',
     },
@@ -546,6 +579,20 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    trackButton: {
+        alignSelf: 'center',
+        width: '50%',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 20,
+        borderRadius: 15,
+        marginBottom: 30,
+        backgroundColor: '#FCA703',
+    },
+    trackButtonText: {
+        fontSize: 16,
+        color: 'white',
     },
 });
 

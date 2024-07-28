@@ -1,13 +1,50 @@
-import React from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/Foundation';
+import { useDispatch, useSelector } from 'react-redux';
+import _ from 'lodash';
+import { fetchSteps } from '../redux/actions/stepActions';
 
 const StepsComponent = () => {
+    const stepsObject = useSelector((state) => state.steps.steps);
+    const dispatch = useDispatch();
+
+    useEffect(() => {
+        const getUserId = async () => {
+            try {
+                const id = await AsyncStorage.getItem('userId');
+                console.log('id user', id);
+                if (id !== null) {
+                    fetchStepsData(id);
+                } else {
+                    console.warn('No userId found in AsyncStorage');
+                }
+            } catch (error) {
+                console.error('Failed to load userId from AsyncStorage', error);
+            }
+        };
+
+        getUserId();
+    }, [dispatch, fetchStepsData]);
+
+    const fetchStepsData = useCallback(
+        _.debounce(async (userId) => {
+            try {
+                await dispatch(fetchSteps(userId));
+            } catch (error) {
+                console.error('Error fetching steps:', error);
+            }
+        }, 1000), // Adjust the debounce delay as needed
+        [dispatch]
+    );
+
+
     return (
         <View style={styles.container}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <Icon name={'foot'} size={24} color="black" />
-                <Text style={styles.stepsCount}>1234 <Text style={{ color: "#36454F" }}>Steps</Text></Text>
+                <Text style={styles.stepsCount}> {stepsObject} <Text style={{ color: "#36454F" }}>Steps</Text></Text>
             </View>
             <View style={styles.progressBarBackground}>
                 <View style={styles.progressBarFill1} />

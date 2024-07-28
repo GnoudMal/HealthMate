@@ -4,13 +4,13 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon2 from 'react-native-vector-icons/Ionicons';
 import LoginAccount from './LoginScreen';
 import SplashScreen from './SplashScreen';
 import SignUp from './SignUp';
 import HomeScreen from './HomeScreen';
 import AdditionalInfoScreen from './AdditionalInfoScreen';
 import StatsScreen from './StatsScreen';
-import CameraScreen from './CameraScreen';
 import ProfileScreen from './ProfileScreen';
 import MindScreen from './MindScreen';
 import SleepTracking from './SleepScreen';
@@ -19,6 +19,16 @@ import PhysicalScreen from './PhysicalScreen';
 import MentalHealthScreen from './EntertainmentScreen';
 import YogaList from './YogaList';
 import MeditationList from './MeditationList';
+import store from '../redux/store/store';
+import { Provider } from 'react-redux';
+import Consultation from './ConsultationScreen';
+import ExpertConsultationsScreen from './ExpertConsultationsScreen';
+import ExpertConsultations from './ExpertConsultationsScreen';
+import ConsultantsManagement from './ConsultantsManagement';
+import QuestionDetail from './QuestionDetail';
+import PersonalDetail from './PersonalEdit';
+import FriendScreen from './FriendScreen';
+import FriendsListScreen from './FriendsList';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -34,9 +44,9 @@ const HomeTabs = () => (
                     iconName = focused ? 'home' : 'home';
                 } else if (route.name === 'Stats') {
                     iconName = focused ? 'bar-chart' : 'bar-chart';
-                } else if (route.name === 'Search') {
-                    iconName = focused ? 'search' : 'search';
-                } else if (route.name === 'Camera') {
+                } else if (route.name === 'Social') {
+                    iconName = focused ? 'earth-outline' : 'earth-outline';
+                } else if (route.name === 'Consultation') {
                     iconName = focused ? 'camera' : 'camera';
                 } else if (route.name === 'Profile') {
                     iconName = focused ? 'person' : 'person';
@@ -68,37 +78,46 @@ const HomeTabs = () => (
                 tabBarButton: (props) => (
                     <TouchableOpacity style={styles.searchButtonContainer} {...props}>
                         <View style={styles.searchButton}>
-                            <Icon name="search" size={30} color="#fff" />
+                            <Icon2 name="earth-outline" size={30} color="black" />
                         </View>
                     </TouchableOpacity>
                 ),
             }}
         />
-        <Tab.Screen name="Camera" component={CameraScreen} />
+        <Tab.Screen name="Consultation" component={Consultation} />
         <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
 );
 
 const RootComponent = () => {
     return (
-        <NavigationContainer>
-            <StatusBar backgroundColor="transparent" translucent barStyle="dark-content" />
-            <Stack.Navigator initialRouteName="SplashScreen" screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="LoginAccount" component={LoginAccount} />
-                <Stack.Screen name="SignUp" component={SignUp} />
-                <Stack.Screen name="SplashScreen" component={SplashScreen} />
-                <Stack.Screen name="HomeScreen" component={HomeTabs} />
-                <Stack.Screen name="AdditionalInfoScreen" component={AdditionalInfoScreen} />
-                <Stack.Screen name="MindScreen" component={MindScreen} />
-                <Stack.Screen name="SleepTracking" component={SleepTracking} />
-                <Stack.Screen name="HealthScreen" component={HealthScreen} />
-                <Stack.Screen name="PhysicalScreen" component={PhysicalScreen} />
-                <Stack.Screen name="MentalHealthScreen" component={MentalHealthScreen} />
-                <Stack.Screen name="YogaList" component={YogaList} />
-                <Stack.Screen name="MeditationList" component={MeditationList} />
+        <Provider store={store}>
+            <NavigationContainer>
+                <StatusBar backgroundColor="transparent" translucent barStyle="dark-content" />
+                <Stack.Navigator initialRouteName="SplashScreen" screenOptions={{ headerShown: false }}>
+                    <Stack.Screen name="LoginAccount" component={LoginAccount} />
+                    <Stack.Screen name="SignUp" component={SignUp} />
+                    <Stack.Screen name="SplashScreen" component={SplashScreen} />
+                    <Stack.Screen name="HomeScreen" component={HomeTabs} />
+                    <Stack.Screen name="AdditionalInfoScreen" component={AdditionalInfoScreen} />
+                    <Stack.Screen name="MindScreen" component={MindScreen} />
+                    <Stack.Screen name="SleepTracking" component={SleepTracking} />
+                    <Stack.Screen name="HealthScreen" component={HealthScreen} />
+                    <Stack.Screen name="PhysicalScreen" component={PhysicalScreen} />
+                    <Stack.Screen name="MentalHealthScreen" component={MentalHealthScreen} />
+                    <Stack.Screen name="YogaList" component={YogaList} />
+                    <Stack.Screen name="MeditationList" component={MeditationList} />
+                    <Stack.Screen name="ExpertConsultationsScreen" component={ExpertConsultationsScreen} />
+                    <Stack.Screen name="ConsultantsManagement" component={ConsultantsManagement} />
+                    <Stack.Screen name="QuestionDetail" component={QuestionDetail} />
+                    <Stack.Screen name="PersonalDetail" component={PersonalDetail} />
+                    <Stack.Screen name="FriendScreen" component={FriendScreen} />
+                    <Stack.Screen name="FriendsListScreen" component={FriendsListScreen} />
 
-            </Stack.Navigator>
-        </NavigationContainer>
+
+                </Stack.Navigator>
+            </NavigationContainer>
+        </Provider>
     );
 }
 
@@ -134,5 +153,5 @@ const styles = StyleSheet.create({
         elevation: 10,
         marginBottom: 10,
     },
-    
+
 });

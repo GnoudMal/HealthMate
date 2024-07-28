@@ -1,4 +1,5 @@
 // service/firebaseService.js
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import firestore from '@react-native-firebase/firestore';
 
 export async function fetchTracksFromFirebase() {
@@ -51,4 +52,18 @@ export const fetchVideosByType = async (userId, type) => {
         return [];
     }
 };
+
+export const saveExpertiseFields = async (fields) => {
+    try {
+        const userId = await AsyncStorage.getItem('userId');
+        // Lưu các lĩnh vực tư vấn vào Firestore
+        await firestore().collection('Users').doc(userId).update({
+            expertiseFields: fields
+        });
+        console.log('Expertise fields updated successfully');
+    } catch (error) {
+        console.error('Error updating expertise fields:', error);
+    }
+};
+
 

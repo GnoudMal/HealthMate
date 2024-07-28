@@ -10,7 +10,8 @@ import {
     FlatList,
     Modal,
     TextInput,
-    Button
+    Button,
+    Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -25,6 +26,8 @@ import { addTrackToFirebase } from '../redux/reducers/trackReducer'; // Import a
 import { fetchTracksFromFirebase } from '../service/firebaseService';
 import store from '../redux/store/store';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { launchImageLibrary } from 'react-native-image-picker';
 
 const MentalHealthScreen = () => {
     const [isPlayerReady, setIsPlayerReady] = useState(false);
@@ -32,9 +35,65 @@ const MentalHealthScreen = () => {
     const [title, setTitle] = useState('');
     const [genre, setGenre] = useState('');
     const [url, setUrl] = useState('');
-    const [userId, setUserId] = useState('');
+    const [artist, setArtist] = useState('');
+    const [imageUri, setImageUri] = useState(null);
+    const [userId, setUserId] = useState(null);
     const dispatch = useDispatch();
     const navigation = useNavigation();
+
+    useEffect(() => {
+        const getUserId = async () => {
+            try {
+                const id = await AsyncStorage.getItem('userId');
+                if (id !== null) {
+                    setUserId(id);
+                } else {
+                    console.warn('No userId found in AsyncStorage');
+                }
+            } catch (error) {
+                console.error('Failed to load userId from AsyncStorage', error);
+            }
+        };
+
+        getUserId();
+    }, []);
+
+    const selectImage = useCallback(() => {
+        const options = {
+            mediaType: 'photo',
+            maxWidth: 300,
+            maxHeight: 300,
+            quality: 1,
+        };
+
+        launchImageLibrary(options, (response) => {
+            if (response.didCancel) {
+                console.log('User cancelled image picker');
+            } else if (response.error) {
+                console.error('ImagePicker Error: ', response.error);
+            } else {
+                const uri = response.assets[0].uri;
+                setImageUri(uri);
+            }
+        });
+    }, []);
+
+    const uploadImage = async (image) => {
+        const { uri } = image.assets[0];
+        const filename = uri.substring(uri.lastIndexOf('/') + 1);
+        const uploadUri = Platform.OS === 'ios' ? uri.replace('file://', '') : uri;
+        console.log(uploadUri);
+        try {
+            await storage().ref(filename).putFile(uploadUri);
+            const url = await storage().ref(filename).getDownloadURL();
+            setImageUrl(url);
+            return url;
+        } catch (e) {
+            console.log('eror ne');
+            console.error(e);
+            return null;
+        }
+    };
 
     useEffect(() => {
         async function setup() {
@@ -55,7 +114,7 @@ const MentalHealthScreen = () => {
     }, []);
 
     const handleAddTrack = useCallback(async () => {
-        if (!title || !genre || !url || !userId) {
+        if (!title || !genre || !url) {
             console.error('Please fill all fields');
             return;
         }
@@ -67,23 +126,42 @@ const MentalHealthScreen = () => {
 
             console.log(newId);
 
-            const newTrack = { id: newId, title, genre, url };
+            console.log('artist check ', artist);
+            console.log('userId', userId);
+
+            // if (hinhAnh) {
+            //     try {
+            //         const url = await uploadImage(hinhAnh);
+            //         if (url) {
+            //             newEntry.image = url;
+            //         }
+            //     } catch (error) {
+            //         console.error('Error uploading image:', error);
+            //         alert('Failed to upload image.');
+            //         return;
+            //     }
+            // }
+
+            const newTrack = { id: newId, title, genre, url, artist, imageUri };
+
+            console.log('check ne', newTrack);
 
             // Lưu bài hát mới vào Firebase
-            await dispatch(addTrackToFirebase({ track: newTrack, userId }));
+            await dispatch(addTrackToFirebase({ track: newTrack, userId: userId }));
             // Cập nhật TrackPlayer với bài hát mới
 
             setModalVisible(false);
             setTitle('');
             setGenre('');
             setUrl('');
-            setUserId('');
+            setArtist('');
+            setImageUri(null);
 
             console.log('Track added successfully');
         } catch (error) {
             console.error('Error adding track or fetching tracks:', error);
         }
-    }, [dispatch, title, genre, url, userId]);
+    }, [dispatch, title, genre, url, artist, imageUri]);
 
 
     if (!isPlayerReady) {
@@ -179,10 +257,17 @@ const MentalHealthScreen = () => {
                         />
                         <TextInput
                             style={styles.input}
-                            placeholder="User ID"
-                            value={userId}
-                            onChangeText={setUserId}
+                            placeholder="artist"
+                            value={artist}
+                            onChangeText={setArtist}
                         />
+                        <Button title="Select Image" onPress={selectImage} />
+                        {imageUri && (
+                            <Image
+                                source={{ uri: imageUri }}
+                                style={styles.selectedImage}
+                            />
+                        )}
                         <Button title="Add Track" onPress={handleAddTrack} />
                         <Button title="Cancel" onPress={() => setModalVisible(false)} color="red" />
                     </View>
@@ -207,6 +292,13 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#F5F5F5',
         padding: 16,
+    },
+    selectedImage: {
+        width: 100,
+        height: 100,
+        borderRadius: 8,
+        marginTop: 8,
+        marginBottom: 16,
     },
     loadingContainer: {
         flex: 1,

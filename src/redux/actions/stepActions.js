@@ -5,9 +5,30 @@ import firestore from '@react-native-firebase/firestore';
 const convertTimestamp = (timestamp) => {
     return timestamp ? new Date(timestamp.seconds * 1000).toISOString() : null;
 };
+const convertDateToFirestoreTimestamp = (date) => {
+    const timestamp = new Date(date).getTime();
+    return firestore.Timestamp.fromMillis(timestamp);
+};
 
 export const fetchSteps = createAsyncThunk('steps/fetchSteps', async (userId) => {
-    const snapshot = await firestore().collection('steps').where('userId', '==', userId).get();
+    const today = new Date();
+    const startOfDay = new Date(today);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(today);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const startTimestamp = convertDateToFirestoreTimestamp(startOfDay);
+    console.log('time', startTimestamp);
+    const endTimestamp = convertDateToFirestoreTimestamp(endOfDay);
+
+    const snapshot = await firestore().collection('steps')
+        .where('userId', '==', userId)
+        .where('timestamp', '>=', startTimestamp)
+        .where('timestamp', '<=', endTimestamp)
+        .get();
+
+
+
     console.log(userId);
     const stepsData = snapshot.docs.map(doc => {
         const data = doc.data();
@@ -46,6 +67,7 @@ export const updateSteps = createAsyncThunk(
 
         // Lấy tài liệu hiện tại (nếu có)
         const doc = await stepsRef.get();
+        console.log('check doc', doc);
 
         if (doc.exists) {
             // Nếu tài liệu tồn tại, cập nhật tổng số bước
@@ -57,6 +79,8 @@ export const updateSteps = createAsyncThunk(
                 timestamp: new Date(),
             });
 
+            console.log('check update steptrack', updatedSteps);
+
             return { userId, steps: updatedSteps }; // Trả về số bước đã cập nhật
         } else {
             // Nếu tài liệu không tồn tại, tạo mới với số bước hiện tại
@@ -65,6 +89,8 @@ export const updateSteps = createAsyncThunk(
                 steps: newSteps,
                 timestamp: new Date(),
             });
+
+            console.log(updatedSteps);
 
             return { userId, steps: newSteps }; // Trả về số bước mới
         }

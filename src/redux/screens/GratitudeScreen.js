@@ -1,34 +1,41 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, Modal, TextInput, Pressable, Alert } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import Icon2 from 'react-native-vector-icons/Ionicons';
+import Icon3 from 'react-native-vector-icons/AntDesign';
+import * as ImagePicker from 'react-native-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchEntries, addEntryToFirestore, deleteEntryFromFirestore, updateEntryInFirestore } from '../actions/gratitudeActions';
 import { useNavigation } from '@react-navigation/native';
 import { addGoalToFirestore, fetchGoals } from '../actions/GoalActions';
 import { Notifications } from 'react-native-notifications';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import storage from '@react-native-firebase/storage';
 
 const GratitudeScreen = () => {
     const navigation = useNavigation();
+    const goals = useSelector((state) => state.goal.goals);
 
     const [userId, setUserId] = useState(null);
     const dispatch = useDispatch();
     const [newTitle, setNewTitle] = useState('');
     const [newContent, setNewContent] = useState('');
     const { entries, status, error } = useSelector(state => state.gratitude);
-    const goals = useSelector((state) => state.goal);
     const [addModalVisible, setAddModalVisible] = useState(false);
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [editEntryId, setEditEntryId] = useState(null);
-
+    const currentGoal = goals.find(goal => goal.chức_năng === 'Gratitude') || { mục_tiêu: 0 };
     const [editTitle, setEditTitle] = useState('');
     const [editContent, setEditContent] = useState('');
     const [goalModalVisible, setGoalModalVisible] = useState(false);
     const [selectedGoal, setSelectedGoal] = useState(null);
     const [isTimePickerVisible, setTimePickerVisible] = useState(false);
     const [reminderTime, setReminderTime] = useState(null);
+    const [imageUrl, setImageUrl] = useState(null);
+    const [hinhAnh, setHinhAnh] = useState(null);
+
+    console.log();
 
     useEffect(() => {
         const getUserId = async () => {
@@ -101,7 +108,8 @@ const GratitudeScreen = () => {
         }
     }, [dispatch, userId]);
 
-    const handleAddEntry = () => {
+    const handleAddEntry = async () => {
+
         if (!userId) {
             alert('User ID is not available');
             return;
@@ -112,8 +120,21 @@ const GratitudeScreen = () => {
         const newEntry = {
             title: newTitle,
             content: newContent,
-            date: new Date().toISOString()
+            date: new Date().toISOString(),
+            image: imageUrl
         };
+        if (hinhAnh) {
+            try {
+                const url = await uploadImage(hinhAnh);
+                if (url) {
+                    newEntry.image = url;
+                }
+            } catch (error) {
+                console.error('Error uploading image:', error);
+                alert('Failed to upload image.');
+                return;
+            }
+        }
 
         dispatch(addEntryToFirestore({ entry: newEntry, id_user: userId }))
             .then(() => console.log('Entry added successfully'),
@@ -124,6 +145,63 @@ const GratitudeScreen = () => {
             .catch(error => console.error('Error adding entry:', error));
     };
 
+    const chonAnh = useCallback(() => {
+        let options = {
+            mediaType: 'photo',
+            selectionLimit: 1,
+        };
+        ImagePicker.launchImageLibrary(options, (response) => {
+            if (response.didCancel) {
+                console.log('User cancelled image picker');
+            } else if (response.error) {
+                console.log('ImagePicker Error: ', response.error);
+            } else {
+                setHinhAnh(response);
+            }
+        });
+    }, []);
+
+    const uploadImage = async (image) => {
+        const { uri } = image.assets[0];
+        const filename = uri.substring(uri.lastIndexOf('/') + 1);
+        const uploadUri = Platform.OS === 'ios' ? uri.replace('file://', '') : uri;
+        console.log(uploadUri);
+        try {
+            await storage().ref(filename).putFile(uploadUri);
+            const url = await storage().ref(filename).getDownloadURL();
+            setImageUrl(url);
+            return url;
+        } catch (e) {
+            console.log('eror ne');
+            console.error(e);
+            return null;
+        }
+    };
+
+    const saveImageUrlToFirestore = async (url) => {
+        try {
+            await firestore().collection('gratitudeEntries').doc(userId).update({
+                avatarUrl: url,
+            });
+            alert('Image uploaded successfully!');
+        } catch (e) {
+            console.error(e);
+            alert('Failed to save image URL to Firestore.');
+        }
+    };
+
+    const handleImageUpload = async () => {
+        if (hinhAnh) {
+            const url = await uploadImage(hinhAnh);
+            if (url) {
+                await saveImageUrlToFirestore(url);
+            }
+        }
+    };
+
+    useEffect(() => {
+        console.log(hinhAnh);
+    }, [hinhAnh])
 
     const handleDeleteEntry = (id) => {
         if (!userId) {
@@ -288,9 +366,12 @@ const GratitudeScreen = () => {
         </Modal>
     );
 
+    console.log('log target', goals.mục_tiêu);
+
     const renderItem = ({ item }) => (
         <Pressable style={styles.card} onPress={() => openEditModal(item)}>
             <View>
+                <Image source={{ uri: item.image }} style={styles.imgCard} />
                 <Text style={styles.cardTitle}>{item.title}</Text>
                 <Text style={styles.cardContent}>{item.content}</Text>
                 <Text style={styles.cardDate}>Created at {new Date(item.date).toLocaleDateString()}</Text>
@@ -312,7 +393,7 @@ const GratitudeScreen = () => {
                 </TouchableOpacity>
 
                 <View style={styles.headerIcons}>
-                    <Icon name="filter" size={24} color="#000" style={styles.icon} />
+                    <Icon3 name="pushpin" size={24} onPress={() => setGoalModalVisible(true)} color="#000" style={styles.icon} />
                     <Icon2 onPress={showTimePicker} name="time" size={24} color="#000" style={styles.icon} />
 
                     <Image
@@ -323,13 +404,20 @@ const GratitudeScreen = () => {
             </View>
 
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <TouchableOpacity onPress={() => setGoalModalVisible(true)}>
+                <TouchableOpacity >
                     <Icon name="list" size={24} color="#000" style={styles.icon} />
                 </TouchableOpacity>
                 <Text style={styles.title}>BIẾT ƠN</Text>
             </View>
             {status === 'loading' && <Text>Đang tải...</Text>}
             {error && <Text style={styles.error}>{error}</Text>}
+            <View style={styles.goalSection}>
+                <Text style={styles.goalTitle}>Mục tiêu hiện tại: {currentGoal.mục_tiêu}</Text>
+
+                {/* <TouchableOpacity onPress={() => setGoalModalVisible(true)} style={styles.selectGoalButton}>
+                    <Text style={styles.selectGoalText}>Chọn Mục Tiêu</Text>
+                </TouchableOpacity> */}
+            </View>
             <FlatList
                 data={entries}
                 renderItem={renderItem}
@@ -366,16 +454,15 @@ const GratitudeScreen = () => {
                             value={newContent}
                             onChangeText={setNewContent}
                         />
-                        <View style={[styles.input, { padding: 2, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
-                            <TextInput
-                                placeholderTextColor={'#FFFFFF'}
-                                placeholder="Add Image (Optional)"
-                                style={{ fontSize: 16, }}
-                            // value={newContent}
-                            // onChangeText={setNewContent}
-                            />
-                            <Icon name="image" size={24} color="#fff" style={styles.icon} />
-                        </View>
+
+                        <TouchableOpacity style={styles.imageButton} onPress={chonAnh}>
+                            <Text style={styles.imageButtonText}>Chọn Ảnh</Text>
+                        </TouchableOpacity>
+                        {hinhAnh && (
+                            <Image source={{ uri: hinhAnh.assets[0].uri }} style={styles.avatar} />
+                        )}
+
+
 
                         <View style={{ flexDirection: 'row' }}>
                             <TouchableOpacity onPress={handleAddEntry} style={styles.btnTask}>
@@ -388,13 +475,7 @@ const GratitudeScreen = () => {
                     </View>
                 </View>
             </Modal>
-            <View style={styles.goalSection}>
-                <Text style={styles.goalTitle}>Mục tiêu hiện tại: {selectedGoal}</Text>
 
-                {/* <TouchableOpacity onPress={() => setGoalModalVisible(true)} style={styles.selectGoalButton}>
-                    <Text style={styles.selectGoalText}>Chọn Mục Tiêu</Text>
-                </TouchableOpacity> */}
-            </View>
             {renderGoalModal()}
             <DateTimePickerModal
                 isVisible={isTimePickerVisible}
@@ -413,10 +494,22 @@ const styles = StyleSheet.create({
         paddingTop: 40,
         paddingHorizontal: 20,
     },
+    imgCard: {
+        width: 200,
+        height: 200,
+        borderRadius: 50,
+        marginBottom: 20,
+    },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+    },
+    avatar: {
+        width: 200,
+        height: 200,
+        // borderRadius: 50,
+        marginBottom: 20,
     },
     profileImage: {
         width: 50,
@@ -437,6 +530,16 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#FF6F61',
         marginVertical: 20,
+    },
+    imageButton: {
+        padding: 10,
+        backgroundColor: 'black',
+        borderRadius: 14,
+        elevation: 10,
+        marginBottom: 15,
+    },
+    imageButtonText: {
+        color: 'white',
     },
     contentContainer: {
         paddingBottom: 100,
@@ -536,10 +639,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     goalSection: {
-        position: 'absolute',
-        bottom: 80,
-        left: 0,
-        right: 0,
+        // position: 'absolute',
+        // bottom: 80,
+        // left: 0,
+        // right: 0,
         alignItems: 'center',
     },
     goalTitle: {
