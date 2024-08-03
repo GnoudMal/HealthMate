@@ -1,27 +1,23 @@
 import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { color } from 'react-native-elements/dist/helpers';
-
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useTheme } from '../service/ThemeContext'; // Adjust the path as needed
 
 const CategoryButton = ({ icon, label, onPress }) => {
+    const { theme } = useTheme();
+
     return (
         <TouchableOpacity style={styles.button} onPress={onPress}>
-            <View style={{
-                backgroundColor: '#F1EBEB',
-                borderRadius: 20,
-                padding: 12,
-            }}>
-                <Icon name={icon} size={38} color="black" />
+            <View style={[styles.iconContainer, { backgroundColor: theme.colors.iconBackground }]}>
+                <Icon name={icon} size={38} color={theme.colors.iconColor} />
             </View>
-            <Text style={styles.buttonText}>{label}</Text>
+            <Text style={[styles.buttonText, { color: theme.colors.textColor }]}>{label}</Text>
         </TouchableOpacity>
     );
 };
 
 const CategoryButtons = ({ navigation }) => {
     const handleCategoryPress = (label) => {
-        // Thực hiện điều hướng đến màn hình tương ứng với label ở đây
         if (label === 'Tinh Thần') {
             navigation.navigate('MindScreen');
         } else if (label === 'Giấc Ngủ') {
@@ -33,7 +29,6 @@ const CategoryButtons = ({ navigation }) => {
         } else {
             navigation.navigate('MentalHealthScreen')
         }
-        // Các xử lý điều hướng cho các label khác
     };
 
     return (
@@ -57,11 +52,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         flex: 1,
     },
+    iconContainer: {
+        borderRadius: 20,
+        padding: 12,
+    },
     buttonText: {
-        color: 'black',
+        fontFamily: 'Poppins_SemiBold',
         fontSize: 12,
         marginTop: 5,
-        fontWeight: 'bold'
     },
 });
 

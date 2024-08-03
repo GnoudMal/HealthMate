@@ -282,15 +282,21 @@ const NutrionScreen = () => {
                         />
                         <Picker
                             selectedValue={editGender}
-                            onValueChange={(itemValue, itemIndex) => setGender(itemValue)}
+                            onValueChange={(itemValue) => setGender(itemValue)}
                             style={styles.picker}
                         >
                             <Picker.Item label="Chọn giới tính" value="" />
                             <Picker.Item label="Nam" value="Nam" />
                             <Picker.Item label="Nữ" value="Nữ" />
                         </Picker>
-                        <Button title="Cập nhật" onPress={handleUpdateUser} />
-                        <Button title="Hủy" onPress={toggleModal} />
+                        <View style={styles.buttonContainer}>
+                            <TouchableOpacity style={styles.button} onPress={handleUpdateUser}>
+                                <Text style={styles.buttonText}>Cập nhật</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={toggleModal}>
+                                <Text style={styles.buttonText}>Hủy</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </View>
             </Modal>
@@ -418,23 +424,53 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
     modalContent: {
-        backgroundColor: 'white',
-        padding: 20,
-        borderRadius: 8,
         width: '80%',
+        backgroundColor: 'white',
+        borderRadius: 10,
+        padding: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
     },
     modalTitle: {
         fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 20,
+        textAlign: 'center',
     },
     input: {
-        color: 'black',
         height: 40,
         borderColor: 'gray',
         borderWidth: 1,
-        marginBottom: 20,
+        borderRadius: 5,
+        marginBottom: 15,
         paddingHorizontal: 10,
+    },
+    picker: {
+        height: 50,
+        width: '100%',
+        marginBottom: 15,
+    },
+    buttonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    button: {
+        flex: 1,
+        backgroundColor: '#2196F3',
+        borderRadius: 5,
+        padding: 10,
+        alignItems: 'center',
+        marginHorizontal: 5,
+    },
+    cancelButton: {
+        backgroundColor: 'red',
+    },
+    buttonText: {
+        color: 'white',
+        fontWeight: 'bold',
     },
     picker: {
         color: 'black',

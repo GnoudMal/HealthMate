@@ -1,12 +1,21 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchEntries, addEntryToFirestore, deleteEntryFromFirestore, updateEntryInFirestore } from '../actions/gratitudeActions';
+import {
+    fetchEntries,
+    addEntryToFirestore,
+    deleteEntryFromFirestore,
+    updateEntryInFirestore,
+    addSharedEntryToFirestore,
+    fetchSharedEntries,
+    deleteSharedEntryFromFirestore
+} from '../actions/gratitudeActions';
 
 const gratitudeSlice = createSlice({
     name: 'gratitude',
     initialState: {
         entries: [],
+        sharedEntries: [],
+        status: 'idle',
         error: null,
-        status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
     },
     reducers: {},
     extraReducers: (builder) => {
@@ -20,30 +29,38 @@ const gratitudeSlice = createSlice({
             })
             .addCase(fetchEntries.rejected, (state, action) => {
                 state.status = 'failed';
-                state.error = action.error.message;
+                state.error = action.payload;
             })
             .addCase(addEntryToFirestore.fulfilled, (state, action) => {
                 state.entries.push(action.payload);
             })
-            .addCase(deleteEntryFromFirestore.pending, (state) => {
-                state.status = 'loading';
-            })
             .addCase(deleteEntryFromFirestore.fulfilled, (state, action) => {
-                state.status = 'succeeded';
                 state.entries = state.entries.filter(entry => entry.id !== action.payload.id);
             })
-            .addCase(deleteEntryFromFirestore.rejected, (state, action) => {
-                state.status = 'failed';
-                state.error = action.error.message;
-            })
             .addCase(updateEntryInFirestore.fulfilled, (state, action) => {
-                const { id, updatedEntry } = action.payload;
-                state.entries = state.entries.map(entry =>
-                    entry.id === id ? { ...entry, ...updatedEntry } : entry
-                );
+                const index = state.entries.findIndex(entry => entry.id === action.payload.id);
+                if (index !== -1) {
+                    state.entries[index] = action.payload;
+                }
+            })
+            .addCase(addSharedEntryToFirestore.fulfilled, (state, action) => {
+                state.sharedEntries.push(action.payload);
+            })
+            .addCase(fetchSharedEntries.pending, (state) => {
+                state.status = 'loading';
+            })
+            .addCase(fetchSharedEntries.fulfilled, (state, action) => {
+                state.status = 'succeeded';
+                state.sharedEntries = action.payload;
+            })
+            .addCase(fetchSharedEntries.rejected, (state, action) => {
+                state.status = 'failed';
+                state.error = action.payload;
+            })
+            .addCase(deleteSharedEntryFromFirestore.fulfilled, (state, action) => {
+                state.sharedEntries = state.sharedEntries.filter(entry => entry.docId !== action.payload);
             });
-
-    },
+    }
 });
 
 export default gratitudeSlice.reducer;

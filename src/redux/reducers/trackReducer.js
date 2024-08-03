@@ -4,9 +4,12 @@ import firestore from '@react-native-firebase/firestore';
 // Fetch Tracks
 export const fetchTracks = createAsyncThunk(
     'tracks/fetchTracks',
-    async (_, { rejectWithValue }) => {
+    async ({ userId }) => {
         try {
-            const snapshot = await firestore().collection('tracks').get();
+            const snapshot = await firestore()
+                .collection('tracks')
+                .where('userId', '==', userId)
+                .get();
             const tracks = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
@@ -14,7 +17,8 @@ export const fetchTracks = createAsyncThunk(
             console.log('check log', tracks);
             return tracks;
         } catch (error) {
-            return rejectWithValue(error.message);
+            console.log('da vang khoi track');
+            return { error: error.message };
         }
     }
 );

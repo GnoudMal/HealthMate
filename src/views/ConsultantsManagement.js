@@ -12,17 +12,14 @@ const ConsultantsManagementScreen = () => {
     const [newConsultantName, setNewConsultantName] = useState('');
     const [newConsultantEmail, setNewConsultantEmail] = useState('');
     const [newConsultantPassword, setNewConsultantPassword] = useState('');
-    const [newConsultantExpertise, setNewConsultantExpertise] = useState('');
-
     const [editingConsultant, setEditingConsultant] = useState(null);
     const [editName, setEditName] = useState('');
+    const [modalVisible, setModalVisible] = useState(false);
 
     const dispatch = useDispatch();
     const consultants = useSelector(state => state.consultants.list);
     const status = useSelector(state => state.consultants.status);
     const navigation = useNavigation();
-
-    const [modalVisible, setModalVisible] = useState(false);
 
     useEffect(() => {
         dispatch(fetchConsultants());
@@ -41,7 +38,6 @@ const ConsultantsManagementScreen = () => {
             Alert.alert('Error', 'Password is required');
             return;
         }
-        // Optional: validate email format
         const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailPattern.test(newConsultantEmail)) {
             Alert.alert('Error', 'Invalid email format');
@@ -52,13 +48,13 @@ const ConsultantsManagementScreen = () => {
             email: newConsultantEmail,
             password: newConsultantPassword,
             expertise: field,
-        })).then(() => dispatch(fetchConsultants()))
+        }))
+            .then(() => dispatch(fetchConsultants()))
             .catch(error => Alert.alert('Error', error.message));
 
         setNewConsultantName('');
         setNewConsultantEmail('');
         setNewConsultantPassword('');
-        // setNewConsultantExpertise('');
         setField('');
         setModalVisible(false);
     };
@@ -105,11 +101,11 @@ const ConsultantsManagementScreen = () => {
                 <TouchableOpacity style={styles.btnBack} onPress={() => navigation.goBack()}>
                     <Icon name="arrow-back" size={24} color="black" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Consultants Management</Text>
+                <Text style={styles.headerTitle}>Quản Lý Tư Vấn Viên</Text>
             </View>
 
             <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.openModalButton}>
-                <Text style={styles.openModalButtonText}>Add New Consultant</Text>
+                <Text style={styles.openModalButtonText}>Thêm Tư Vấn Viên</Text>
             </TouchableOpacity>
 
             <Modal
@@ -139,16 +135,14 @@ const ConsultantsManagementScreen = () => {
                             value={newConsultantPassword}
                             onChangeText={setNewConsultantPassword}
                         />
-                        <Picker selectedValue={field} onValueChange={(itemValue) => setField(itemValue)}>
+                        <Picker
+                            selectedValue={field}
+                            onValueChange={(itemValue) => setField(itemValue)}
+                            style={styles.picker}
+                        >
                             <Picker.Item label="Tài chính" value="finance" />
                             <Picker.Item label="Sức khỏe" value="health" />
                         </Picker>
-                        {/* <TextInput
-                            style={styles.input}
-                            placeholder="Expertise"
-                            value={newConsultantExpertise}
-                            onChangeText={setNewConsultantExpertise}
-                        /> */}
                         <TouchableOpacity onPress={handleAddConsultant} style={styles.addButton}>
                             <Text style={styles.addButtonText}>Add Consultant</Text>
                         </TouchableOpacity>
@@ -180,6 +174,7 @@ const ConsultantsManagementScreen = () => {
                                 </View>
                             ) : (
                                 <>
+                                    <Icon name='person-outline' size={24} />
                                     <Text style={styles.itemText}>{item.name}</Text>
                                     <View style={styles.actions}>
                                         <TouchableOpacity onPress={() => handleEditConsultant(item.id, item.name)}>
@@ -211,10 +206,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     btnBack: {
-        // backgroundColor: '#F7F8F8',
         borderRadius: 8,
         padding: 7,
-        marginRight: 10
+        marginRight: 10,
     },
     headerTitle: {
         fontSize: 22,
@@ -245,21 +239,24 @@ const styles = StyleSheet.create({
         padding: 20,
         width: '80%',
         maxWidth: 400,
-        elevation: 5,
     },
     input: {
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
-        padding: 12,
-        marginBottom: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#ccc',
+        marginBottom: 10,
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        fontSize: 16,
+    },
+    picker: {
+        marginBottom: 10,
     },
     addButton: {
         backgroundColor: '#4e9bde',
         paddingVertical: 12,
         borderRadius: 8,
         alignItems: 'center',
-        marginTop: 10,
+        marginBottom: 10,
     },
     addButtonText: {
         color: '#fff',
@@ -268,62 +265,51 @@ const styles = StyleSheet.create({
     },
     closeButton: {
         backgroundColor: '#e74c3c',
-        paddingVertical: 10,
+        paddingVertical: 12,
         borderRadius: 8,
         alignItems: 'center',
-        marginTop: 10,
     },
     closeButtonText: {
         color: '#fff',
         fontWeight: 'bold',
+        fontSize: 16,
+    },
+    loading: {
+        marginTop: 20,
     },
     item: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+        backgroundColor: '#fff',
         padding: 20,
         borderBottomWidth: 1,
         borderBottomColor: '#ddd',
-        backgroundColor: '#fff',
-        marginHorizontal: 10,
-        marginBottom: 10,
-        borderRadius: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 5,
-        elevation: 3,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
     },
     itemText: {
         fontSize: 16,
+        color: '#333',
     },
     actions: {
         flexDirection: 'row',
     },
+    icon: {
+        marginLeft: 10,
+    },
     editContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
     },
     saveButton: {
         backgroundColor: '#4e9bde',
         paddingVertical: 8,
-        paddingHorizontal: 16,
+        paddingHorizontal: 12,
         borderRadius: 8,
         marginLeft: 10,
-        alignItems: 'center',
     },
     saveButtonText: {
         color: '#fff',
         fontWeight: 'bold',
-    },
-    loading: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    icon: {
-        marginHorizontal: 8,
     },
 });
 

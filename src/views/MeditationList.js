@@ -57,7 +57,7 @@ const MeditationList = ({ navigation }) => {
         const videoTitle = await fetchVideoTitle(newVideoId);
         if (!userId) return;
         const newVideo = {
-            title: videoTitle || newVideoTitle,
+            title: newVideoTitle,
             videoId: newVideoId,
             userId,
             type: 'meditation'
@@ -68,6 +68,11 @@ const MeditationList = ({ navigation }) => {
         setModalVisible(false);
         const fetchedVideos = await fetchVideosByType(userId, 'meditation');
         setVideos(fetchedVideos);
+    };
+
+    const handleVideoIdBlur = async () => {
+        const videoTitle = await fetchVideoTitle(newVideoId);
+        setNewVideoTitle(videoTitle);
     };
 
     const renderItem = ({ item }) => (
@@ -118,10 +123,10 @@ const MeditationList = ({ navigation }) => {
             >
                 <View style={styles.modalContainer}>
                     <View style={styles.modalView}>
-                        <Text style={styles.modalTitle}>Add New Video</Text>
+                        <Text style={styles.modalTitle}>Thêm Video</Text>
                         <TextInput
                             style={styles.input}
-                            placeholder="Title"
+                            placeholder="Tiêu Đề"
                             value={newVideoTitle}
                             onChangeText={setNewVideoTitle}
                         />
@@ -130,13 +135,13 @@ const MeditationList = ({ navigation }) => {
                             placeholder="YouTube Video ID"
                             value={newVideoId}
                             onChangeText={setNewVideoId}
+                            onBlur={handleVideoIdBlur}
                         />
-                        <Button title="Add Video" onPress={handleAddVideo} />
-                        <TouchableOpacity
-                            style={{ ...styles.closeButton, backgroundColor: "#2196F3" }}
-                            onPress={() => setModalVisible(!modalVisible)}
-                        >
-                            <Text style={styles.textStyle}>Close</Text>
+                        <TouchableOpacity style={styles.button} onPress={handleAddVideo}>
+                            <Text style={styles.buttonText}>Thêm Video</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={() => setModalVisible(false)}>
+                            <Text style={styles.buttonText}>Hủy</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -157,16 +162,22 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         marginBottom: 16,
     },
+    youtubeContainer: {
+
+        borderColor: 'black',
+        borderRadius: 20,
+        overflow: 'hidden',
+    },
     videoContainer: {
         marginBottom: 15,
         backgroundColor: '#FFF',
-        borderRadius: 10,
+        borderRadius: 20,
         overflow: 'hidden',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 5,
-        elevation: 3,
+        shadowColor: 'brown',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 1,
+        shadowRadius: 15,
+        elevation: 12,
     },
     title: {
         padding: 10,
@@ -233,15 +244,23 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         width: 250,
     },
-    closeButton: {
-        borderRadius: 20,
+    button: {
         padding: 10,
-        elevation: 2
+        width: '100%',
+        height: 40,
+        backgroundColor: '#2196F3',
+        borderRadius: 5,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginVertical: 5,
     },
-    textStyle: {
-        color: "white",
-        fontWeight: "bold",
-        textAlign: "center"
+    cancelButton: {
+        backgroundColor: 'red',
+    },
+    buttonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 });
 

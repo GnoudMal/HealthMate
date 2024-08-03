@@ -236,7 +236,7 @@ const MentalHealthScreen = () => {
             >
                 <View style={styles.modalContainer}>
                     <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Add New Track</Text>
+                        <Text style={styles.modalTitle}>Thêm Nhạc Mới</Text>
                         <TextInput
                             style={styles.input}
                             placeholder="Title"
@@ -261,15 +261,23 @@ const MentalHealthScreen = () => {
                             value={artist}
                             onChangeText={setArtist}
                         />
-                        <Button title="Select Image" onPress={selectImage} />
+                        <TouchableOpacity style={styles.button} onPress={selectImage}>
+                            <Text style={styles.buttonText}>Chọn Ảnh</Text>
+                        </TouchableOpacity>
                         {imageUri && (
                             <Image
                                 source={{ uri: imageUri }}
                                 style={styles.selectedImage}
                             />
                         )}
-                        <Button title="Add Track" onPress={handleAddTrack} />
-                        <Button title="Cancel" onPress={() => setModalVisible(false)} color="red" />
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                            <TouchableOpacity style={styles.button} onPress={handleAddTrack}>
+                                <Text style={styles.buttonText}>Thêm Nhạc</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={() => setModalVisible(false)}>
+                                <Text style={styles.buttonText}>Hủy</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </View>
             </Modal>
@@ -403,7 +411,7 @@ const styles = StyleSheet.create({
     },
     modalContent: {
         width: '80%',
-        backgroundColor: '#fff',
+        backgroundColor: 'rgba(240, 230, 197, 0.91)',
         borderRadius: 16,
         padding: 16,
         alignItems: 'center',
@@ -414,11 +422,31 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     input: {
+        backgroundColor: 'white',
         width: '100%',
         padding: 10,
         marginBottom: 12,
         borderBottomWidth: 1,
+        borderRadius: 15,
         borderBottomColor: '#ccc',
+    },
+    button: {
+        marginHorizontal: 5,
+        width: '45%',
+        height: 40,
+        backgroundColor: 'rgba(55, 203, 249, 0.91)',
+        borderRadius: 5,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginVertical: 5,
+    },
+    cancelButton: {
+        backgroundColor: 'red',
+    },
+    buttonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 });
 

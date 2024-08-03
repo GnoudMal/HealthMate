@@ -10,11 +10,13 @@ const AdditionalInfoScreen = ({ navigation }) => {
     const [gender, setGender] = useState('');
     const [height, setHeight] = useState('');
     const [weight, setWeight] = useState('');
+    const [age, setAge] = useState('');
 
     const [usernameError, setUsernameError] = useState('');
     const [genderError, setGenderError] = useState('');
     const [heightError, setHeightError] = useState('');
     const [weightError, setWeightError] = useState('');
+    const [ageError, setAgeError] = useState('');
 
     const handleSaveInfo = async () => {
         setUsernameError('');
@@ -30,6 +32,13 @@ const AdditionalInfoScreen = ({ navigation }) => {
         }
         if (!gender) {
             setGenderError('Giới tính không được để trống.');
+            isValid = false;
+        }
+        if (!age) {
+            setAgeError('Tuổi không được để trống.');
+            isValid = false;
+        } else if (isNaN(age)) {
+            setAgeError('Tuổi phải là số.');
             isValid = false;
         }
         if (!height) {
@@ -58,12 +67,14 @@ const AdditionalInfoScreen = ({ navigation }) => {
 
         try {
             const userDocRef = firestore().collection('Users').doc(user.uid);
-
+            await AsyncStorage.setItem('userId', user.uid);
+            console.log('cuu canh 2', user.uid);
             await userDocRef.update({
                 username,
                 gender,
                 height,
                 weight,
+                age,
             });
 
             const updatedUserDoc = await userDocRef.get();
@@ -109,6 +120,17 @@ const AdditionalInfoScreen = ({ navigation }) => {
                         />
                     </View>
                     {genderError ? <Text style={styles.errorText}>{genderError}</Text> : null}
+
+                    <View style={styles.inputRow}>
+                        <Icon name="wc" size={24} color="#A0A0A0" />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Tuổi"
+                            value={age}
+                            onChangeText={setAge}
+                        />
+                    </View>
+                    {ageError ? <Text style={styles.errorText}>{ageError}</Text> : null}
 
                     <View style={styles.inputRow}>
                         <Icon name="straighten" size={24} color="#A0A0A0" />

@@ -2,8 +2,13 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Svg, { Path, Circle, Defs, LinearGradient as SvgLinearGradient, Stop, G } from 'react-native-svg';
 import LinearGradient from 'react-native-linear-gradient';
+import { useTheme } from '../service/ThemeContext';
+import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
+
+const AnimatedSvg = Animated.createAnimatedComponent(Svg);
 
 const PieChart = ({ size, percentage, innerText }) => {
+    const { theme } = useTheme();
     const radius = size / 2;
     const largerRadius = radius * 1.2;
     const angle = (percentage / 100) * 360;
@@ -18,25 +23,24 @@ const PieChart = ({ size, percentage, innerText }) => {
     `;
 
     return (
-        <View style={{ width: size + 50, height: size + 50, justifyContent: 'center', alignItems: 'center' }}>
-            <Svg height={size + 35} width={size + 35} viewBox={`0 0 ${size + 20} ${size + 20}`}>
+        <View style={{ width: size + 60, height: size + 50, justifyContent: 'center', alignItems: 'center' }}>
+            <Svg height={size + 30} width={size + 45} viewBox={`0 0 ${size + 20} ${size + 30}`}>
                 <Defs>
                     <SvgLinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <Stop offset="0%" stopColor="#8BF2D3" />
-                        <Stop offset="100%" stopColor="#EEA4CE" />
+                        <Stop offset="0%" stopColor={theme.colors.pieChartGradientStart} />
+                        <Stop offset="100%" stopColor={theme.colors.pieChartGradientEnd} />
                     </SvgLinearGradient>
                 </Defs>
                 <Circle
                     cx={radius + 10}
                     cy={radius + 10}
                     r={radius}
-                    fill="white"
+                    fill={theme.colors.background}
                 />
-                {/* Shadow Effect */}
                 <G>
                     <Path
                         d={pathData}
-                        fill="#8BF2D3"
+                        fill={theme.colors.pieChartGradientStart}
                         transform={`translate(5, 12)`}
                     />
                     <Path
@@ -51,13 +55,17 @@ const PieChart = ({ size, percentage, innerText }) => {
                     />
                 </G>
             </Svg>
-            <Text style={styles.innerText}>{innerText}</Text>
+            <Text style={[styles.innerText, { color: theme.colors.textColor }]}>{innerText}</Text>
         </View>
     );
 };
 
 const BMIComponent = ({ userInfo }) => {
     const { height, weight, gender } = userInfo;
+    const { theme, animatedTheme } = useTheme();
+
+
+
     const calculateBMI = () => {
         const heightInMeter = height / 100;
         return (weight / (heightInMeter * heightInMeter)).toFixed(1);
@@ -78,30 +86,38 @@ const BMIComponent = ({ userInfo }) => {
         }
     };
 
+    const animatedCardStyle = useAnimatedStyle(() => {
+        return {
+            backgroundColor: withTiming(theme.colors.cardBackground, { duration: 500 }),
+        };
+    });
+
+    const animatedTextStyle = useAnimatedStyle(() => {
+        return {
+            color: withTiming(animatedTheme.value === 1 ? 'white' : 'black', { duration: 500 }),
+        };
+    });
+
     return (
         <View style={styles.container}>
-            <LinearGradient colors={['#9BFD92', '#D2F0C0']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                locations={[0, 1]}
-                style={styles.card}>
+            <Animated.View style={[styles.card, animatedCardStyle]}>
                 <View style={{ flexDirection: 'row' }}>
                     <View style={{ flex: 1 }}>
                         <View style={styles.header}>
-                            <Text style={styles.headerText}>{gender}</Text>
+                            <Text style={[styles.headerText, { color: theme.colors.textColor }]}>{gender}</Text>
                         </View>
-                        <Text style={styles.bodyText}>{height} cm - {weight} kg</Text>
-                        <Text style={styles.bodyText}>{evaluateBMI()}</Text>
-                        <TouchableOpacity style={styles.button}>
-                            <Text style={styles.buttonText}>Xem thêm</Text>
+                        <Text style={[styles.bodyText, { color: theme.colors.textColor }]}>{height} cm - {weight} kg</Text>
+                        <Text style={[styles.bodyText, { color: theme.colors.textColor }]}>{evaluateBMI()}</Text>
+                        <TouchableOpacity style={[styles.button, { backgroundColor: theme.colors.pieChartGradientStart }]}>
+                            <Animated.Text style={[styles.buttonText, animatedTextStyle]}>Xem thêm </Animated.Text>
                         </TouchableOpacity>
                     </View>
                     <View style={{ flex: 1 }}>
-                        <Text style={{ fontSize: 14, color: 'black', fontWeight: 'bold' }}>BMI (Body Mass Index)</Text>
+                        <Text style={[styles.bmiLabel, { color: theme.colors.textColor }]}>BMI (Body Mass Index)</Text>
                         <PieChart size={100} percentage={calculateBMI() * 4} innerText={calculateBMI()} />
                     </View>
                 </View>
-            </LinearGradient>
+            </Animated.View>
         </View>
     );
 };
@@ -127,15 +143,17 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 20,
+        // marginBottom: 10,
     },
     headerText: {
         color: 'black',
         fontSize: 20,
-        fontWeight: 'bold',
+        // fontWeight: 'bold',
+        fontFamily: 'Poppins_SemiBold'
     },
     bodyText: {
         color: 'black',
+        fontFamily: 'Poppins_Regular',
         fontWeight: '500',
         fontSize: 14,
         marginBottom: 10,
@@ -159,6 +177,10 @@ const styles = StyleSheet.create({
         color: 'black',
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    bmiLabel: {
+        fontSize: 14,
+        fontFamily: 'Poppins_SemiBold',
     },
 });
 

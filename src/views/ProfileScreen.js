@@ -56,16 +56,22 @@ const ProfileScreen = ({ navigation }) => {
             try {
                 const userInfoJSON = await AsyncStorage.getItem('userInfo');
                 const userInfo = JSON.parse(userInfoJSON);
-
+                console.log('cuu', userInfo.role);
                 if (userInfo) {
                     if (userInfo.role === 'admin') {
                         setIsAdmin(true);
                     }
-                    if (userInfo.role === 'expert' || 'admin') {
+                    if (userInfo.role === 'admin') {
+                        console.log('co vao day k');
+                        setIsExpert(true);
+                        setSelectedFields(userInfo.expertiseFields || []);
+                    } else if (userInfo.role == 'consultant') {
+                        console.log('co vao day k');
                         setIsExpert(true);
                         setSelectedFields(userInfo.expertiseFields || []);
                     }
                 }
+                console.log('sao true', isExpert);
             } catch (error) {
                 console.error('Error fetching user role:', error);
             }
@@ -109,6 +115,8 @@ const ProfileScreen = ({ navigation }) => {
                 : [...prevFields, field]
         );
     };
+
+    console.log(isExpert);
 
     const handleSave = async () => {
         await saveExpertiseFields(selectedFields);

@@ -22,3 +22,52 @@ export const updateEntryInFirestore = createAsyncThunk('gratitude/updateEntryInF
     await firestore().collection('gratitudeEntries').doc(id).update(updatedEntry);
     return { id, updatedEntry };
 });
+export const addSharedEntryToFirestore = createAsyncThunk('gratitude/addSharedEntryToFirestore', async ({ entry, id_user }) => {
+    console.log('test share', { ...entry } + ' ' + id_user);
+
+    const sharedEntry = await firestore().collection('sharedEntries').add({ ...entry, id_user });
+    return { id: sharedEntry.id, ...entry, id_user };
+});
+
+export const fetchSharedEntries = createAsyncThunk(
+    'gratitude/fetchSharedEntries',
+    async ({ userId, friends }, { rejectWithValue }) => {
+        console.log('o vcl');
+        try {
+            const snapshot = await firestore()
+                .collection('sharedEntries')
+                .where('id_user', 'in', [...friends, userId])
+                .get();
+
+            const entries = snapshot.docs.map(doc => ({
+                docId: doc.id, // Lưu trữ document ID từ Firestore
+                ...doc.data(),
+            }));
+
+            return entries;
+        } catch (error) {
+            return rejectWithValue(error.message);
+        }
+    }
+);
+
+
+// export const deleteSharedEntryFromFirestore = createAsyncThunk('gratitude/deleteSharedEntryFromFirestore', async (id) => {
+//     await firestore().collection('sharedEntries').doc(id).delete();
+//     console.log('check id', id);
+
+//     return id;
+// });
+
+export const deleteSharedEntryFromFirestore = createAsyncThunk(
+    'gratitude/deleteSharedEntryFromFirestore',
+    async (docId, { rejectWithValue }) => {
+        try {
+            await firestore().collection('sharedEntries').doc(docId).delete();
+            return docId;
+        } catch (error) {
+            console.error('Failed to delete entry from Firestore', error);
+            return rejectWithValue(error.message);
+        }
+    }
+);

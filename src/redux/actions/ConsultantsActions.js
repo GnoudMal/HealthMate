@@ -18,7 +18,7 @@ export const fetchConsultants = createAsyncThunk('consultants/fetchConsultants',
 });
 
 export const addNewConsultant = createAsyncThunk('consultants/addNewConsultant', async (newConsultantData, { dispatch }) => {
-    const { name, email, password, expertise } = newConsultantData;
+    const { name, email, password } = newConsultantData;
 
     try {
         const userCredential = await auth().createUserWithEmailAndPassword(email, password);
@@ -30,7 +30,6 @@ export const addNewConsultant = createAsyncThunk('consultants/addNewConsultant',
             uid: user.uid,
             email: email,
             name: name,
-            expertise: expertise,
             role: 'consultant',
         });
 

@@ -1,7 +1,16 @@
-import React from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchGoals } from '../redux/actions/GoalActions';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ThemeContext } from '../service/ThemeContext';
+
+const calculateCaloriesFromSteps = (steps) => {
+    const caloriesPerStep = 0.04; // Adjust this value based on your needs
+    return steps * caloriesPerStep;
+};
 
 const CircularProgress = ({ size, strokeWidth, percentage, innerText }) => {
     const radius = (size - strokeWidth) / 2;
@@ -51,21 +60,57 @@ const CircularProgress = ({ size, strokeWidth, percentage, innerText }) => {
 };
 
 const CaloriesComponent = () => {
+    const { isDarkMode, animatedTheme } = useContext(ThemeContext);
+    const dispatch = useDispatch();
+    const [userId, setUserId] = useState(null);
+    const steps = useSelector((state) => state.steps.steps);
+    const goals = useSelector((state) => state.goal.goals); // Assuming goal steps are stored in goal.goalSteps
+    const currentGoal = goals.find(goal => goal.chức_năng === 'Activity') || { mục_tiêu: 0 };
+    console.log('check cu ren', currentGoal.mục_tiêu);
+    console.log(steps);
+
+    const consumedCalories = calculateCaloriesFromSteps(steps);
+    const goalCalories = currentGoal.mục_tiêu > 0 ? calculateCaloriesFromSteps(currentGoal.mục_tiêu) : 0;
+    const remainingCalories = goalCalories - consumedCalories > 0 ? (goalCalories - consumedCalories) : 0;
+
+    console.log('loi ne', goalCalories + '' + consumedCalories);
+
+
+    useEffect(() => {
+        const getUserId = async () => {
+            try {
+                const id = await AsyncStorage.getItem('userId');
+                console.log('id user', id);
+                if (id !== null) {
+                    setUserId(id);
+
+                    dispatch(fetchGoals(id));
+                } else {
+                    console.warn('No userId found in AsyncStorage');
+                }
+            } catch (error) {
+                console.error('Failed to load userId from AsyncStorage', error);
+            }
+        };
+
+        getUserId();
+    }, [dispatch]);
+
     return (
         <View style={styles.container}>
-            <View style={styles.card}>
+            <View style={[styles.card, { backgroundColor: isDarkMode ? '#ccc' : '#FFEB99' }]}>
                 <View style={{ alignItems: 'flex-start', alignSelf: 'flex-start', flexDirection: 'row' }}>
                     <Icon name={'fire'} size={24} color="black" />
                     <View >
                         <Text style={styles.cardTitle}>Calories</Text>
-                        <Text style={styles.caloriesText}>760 kCal</Text>
+                        <Text style={styles.caloriesText}>{consumedCalories.toFixed(2)} kCal</Text>
                     </View>
                 </View>
                 <CircularProgress
-                    size={70}
+                    size={80}
                     strokeWidth={10}
-                    percentage={70}
-                    innerText="240 kCal left"
+                    percentage={(goalCalories > 0 ? (consumedCalories / goalCalories) * 100 : 0)}
+                    innerText={`${remainingCalories.toFixed(2)} kCal left`}
                 />
             </View>
         </View>
@@ -77,7 +122,6 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        // backgroundColor: '#F5F5F5',
     },
     card: {
         width: 150,

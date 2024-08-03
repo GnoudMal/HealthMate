@@ -70,47 +70,43 @@ const LoginAccount = ({ navigation, route }) => {
         try {
             const userCredential = await auth().signInWithEmailAndPassword(email, password);
             const user = userCredential.user;
-            console.log(user.uid);
 
             const userDocument = await firestore().collection('Users').doc(user.uid).get();
+            console.log('check nào', userDocument);
             if (userDocument.exists) {
                 const userData = userDocument.data();
                 if (userData.username && userData.gender && userData.height && userData.weight) {
-                    setModalMessage(`Đăng nhập thành công, chào mừng ${user.email}`);
-                    console.log('Đăng nhập thành công:', user.uid);
-                    console.log('Dữ liệu người dùng:', userData);
+                    setModalMessage('Chào Mừng quay trở lại.');
+
 
                     await AsyncStorage.setItem('userInfo', JSON.stringify(userData));
                     await AsyncStorage.setItem('userId', user.uid);
-                    console.log('id reg', user.uid);
+                    console.log('da lay duoc du lieu');
                     if (rememberMe) {
                         await AsyncStorage.setItem('userToken', user.uid);
-                        console.log('done Token');
                     } else {
                         await AsyncStorage.removeItem('userToken');
                     }
 
-                    // Dispatch và kiểm tra lỗi
-                    try {
-                        await dispatch(setUserId(user.uid));
-                        setModalVisible(true);
-                        navigation.navigate('HomeScreen');
-                    } catch (dispatchError) {
-                        console.error('Dispatch error:', dispatchError);
-                        setModalMessage('Đã xảy ra lỗi khi cập nhật thông tin người dùng.');
-                        setModalVisible(true);
-                    }
+                    // Dispatch action to Redux store
+                    dispatch(setUserId(user.uid));
+                    // Navigate to HomeScreen after data is saved
+                    setModalVisible(false);
+                    navigation.navigate('HomeScreen');
                 } else {
+                    await AsyncStorage.setItem('userId', user.uid);
+                    console.log('cuu canh', user.id);
                     navigation.navigate('AdditionalInfoScreen');
                 }
             } else {
                 setModalMessage('Tài Khoản chưa được tạo.');
             }
         } catch (error) {
+            console.log(error);
+
             switch (error.code) {
                 case 'auth/network-request-failed':
                     setModalMessage('Có vấn đề về mạng và đường truyền.');
-                    setLoading(false);
                     break;
                 case 'auth/invalid-email':
                     setModalMessage('Địa chỉ email không hợp lệ.');
@@ -124,7 +120,6 @@ const LoginAccount = ({ navigation, route }) => {
                 default:
                     setModalMessage('Đã xảy ra lỗi không xác định.');
                     console.log(error.code);
-                    setLoading(false);
                     break;
             }
         } finally {
@@ -304,10 +299,12 @@ const styles = StyleSheet.create({
     welcomeText: {
         fontSize: 24,
         color: '#000',
+        fontFamily: 'Roboto_Regular',
     },
     title: {
+        fontFamily: 'Roboto_Bold',
         fontSize: 50,
-        fontWeight: 'bold',
+        // fontWeight: 'bold',
         color: '#000',
     },
     formContainer: {

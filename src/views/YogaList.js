@@ -34,8 +34,6 @@ const YogaList = ({ navigation }) => {
         getUserId();
     }, []);
 
-    // console.log(userId);
-
     useEffect(() => {
         const loadVideos = async () => {
             if (!userId) return;
@@ -58,7 +56,7 @@ const YogaList = ({ navigation }) => {
         const videoTitle = await fetchVideoTitle(newVideoId);
         if (!userId) return;
         const newVideo = {
-            title: videoTitle || newVideoTitle,
+            title: newVideoTitle,
             videoId: newVideoId,
             type: "yoga",
             userId,
@@ -67,8 +65,13 @@ const YogaList = ({ navigation }) => {
         setNewVideoTitle('');
         setNewVideoId('');
         setModalVisible(false);
-        const fetchedVideos = await fetchVideos(userId);
+        // const fetchedVideos = await fetchVideos(userId);
         setVideos(fetchedVideos);
+    };
+
+    const handleVideoIdBlur = async () => {
+        const videoTitle = await fetchVideoTitle(newVideoId);
+        setNewVideoTitle(videoTitle);
     };
 
     const renderItem = ({ item }) => (
@@ -121,10 +124,10 @@ const YogaList = ({ navigation }) => {
             >
                 <View style={styles.modalContainer}>
                     <View style={styles.modalView}>
-                        <Text style={styles.modalTitle}>Add New Video</Text>
+                        <Text style={styles.modalTitle}>Thêm Video</Text>
                         <TextInput
                             style={styles.input}
-                            placeholder="Title"
+                            placeholder="Tiêu Đề"
                             value={newVideoTitle}
                             onChangeText={setNewVideoTitle}
                         />
@@ -133,13 +136,13 @@ const YogaList = ({ navigation }) => {
                             placeholder="YouTube Video ID"
                             value={newVideoId}
                             onChangeText={setNewVideoId}
+                            onBlur={handleVideoIdBlur}
                         />
-                        <Button title="Add Video" onPress={handleAddVideo} />
-                        <TouchableOpacity
-                            style={{ ...styles.closeButton, backgroundColor: "#2196F3" }}
-                            onPress={() => setModalVisible(!modalVisible)}
-                        >
-                            <Text style={styles.textStyle}>Close</Text>
+                        <TouchableOpacity style={styles.button} onPress={handleAddVideo}>
+                            <Text style={styles.buttonText}>Thêm Video</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={() => setModalVisible(false)}>
+                            <Text style={styles.buttonText}>Hủy</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -242,15 +245,23 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         width: 250,
     },
-    closeButton: {
-        borderRadius: 20,
+    button: {
         padding: 10,
-        elevation: 2
+        width: '100%',
+        height: 40,
+        backgroundColor: '#2196F3',
+        borderRadius: 5,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginVertical: 5,
     },
-    textStyle: {
-        color: "white",
-        fontWeight: "bold",
-        textAlign: "center"
+    cancelButton: {
+        backgroundColor: 'red',
+    },
+    buttonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 });
 

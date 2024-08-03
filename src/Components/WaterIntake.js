@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import { ThemeContext } from '../service/ThemeContext';
 
 const WaterIntakeComponent = () => {
+    const { isDarkMode, animatedTheme } = useContext(ThemeContext);
     const calculateProgressPercentage = () => {
         const now = new Date();
         const currentHour = now.getHours();
@@ -35,50 +37,50 @@ const WaterIntakeComponent = () => {
     const progressPercentage = calculateProgressPercentage();
 
     return (
-        <View style={styles.container}>
-            <View style={styles.card}>
+        <View style={[styles.container, { backgroundColor: isDarkMode ? '#333' : '#FFF' }]}>
+            <View style={[styles.card, { backgroundColor: isDarkMode ? '#444' : '#FFE4E1' }]}>
                 <View style={styles.progressContainer}>
-                    <View style={styles.progressBarBackground}>
-                        <LinearGradient colors={['#C58BF2', '#B4C0FE']} style={[styles.progressBarFill, { height: `${progressPercentage}%` }]} />
+                    <View style={[styles.progressBarBackground, { backgroundColor: isDarkMode ? '#F7F8F8' : '#F7F8F8' }]}>
+                        <LinearGradient colors={isDarkMode ? ['#555', '#777'] : ['#C58BF2', '#B4C0FE']} style={[styles.progressBarFill, { height: `${progressPercentage}%` }]} />
                     </View>
                     <View style={styles.timeUpdates}>
-                        <Text style={styles.cardTitle}>Water Intake</Text>
-                        <Text style={styles.totalLiters}>4 Liters</Text>
-                        <Text style={styles.realTimeUpdates}>Real time updates</Text>
+                        <Text style={[styles.cardTitle, { color: isDarkMode ? '#FFF' : '#1D242A' }]}>Water Intake</Text>
+                        <Text style={[styles.totalLiters, { color: isDarkMode ? '#9DCEFF' : '#9DCEFF' }]}>4 Liters</Text>
+                        <Text style={[styles.realTimeUpdates, { color: isDarkMode ? '#CCC' : '#7B6F72' }]}>Real time updates</Text>
                         <View style={styles.timeUpdate}>
-                            <View style={styles.dot} />
+                            <View style={[styles.dot, { backgroundColor: isDarkMode ? '#FFF' : '#5e17eb' }]} />
                             <View>
-                                <Text style={styles.timeText}>6am - 8am</Text>
-                                <Text style={styles.amountText}>600ml</Text>
+                                <Text style={[styles.timeText, { color: isDarkMode ? '#FFF' : '#555' }]}>6am - 8am</Text>
+                                <Text style={[styles.amountText, { color: isDarkMode ? '#FFF' : '#C58BF2' }]}>600ml</Text>
                             </View>
                         </View>
                         <View style={styles.timeUpdate}>
-                            <View style={styles.dot} />
+                            <View style={[styles.dot, { backgroundColor: isDarkMode ? '#FFF' : '#5e17eb' }]} />
                             <View>
-                                <Text style={styles.timeText}>9am - 11am</Text>
-                                <Text style={styles.amountText}>500ml</Text>
+                                <Text style={[styles.timeText, { color: isDarkMode ? '#FFF' : '#555' }]}>9am - 11am</Text>
+                                <Text style={[styles.amountText, { color: isDarkMode ? '#FFF' : '#C58BF2' }]}>500ml</Text>
                             </View>
                         </View>
                         <View style={styles.timeUpdate}>
-                            <View style={styles.dot} />
+                            <View style={[styles.dot, { backgroundColor: isDarkMode ? '#FFF' : '#5e17eb' }]} />
                             <View>
-                                <Text style={styles.timeText}>11am - 2pm</Text>
-                                <Text style={styles.amountText}>1000ml</Text>
+                                <Text style={[styles.timeText, { color: isDarkMode ? '#FFF' : '#555' }]}>11am - 2pm</Text>
+                                <Text style={[styles.amountText, { color: isDarkMode ? '#FFF' : '#C58BF2' }]}>1000ml</Text>
                             </View>
 
                         </View>
                         <View style={styles.timeUpdate}>
-                            <View style={styles.dot} />
+                            <View style={[styles.dot, { backgroundColor: isDarkMode ? '#FFF' : '#5e17eb' }]} />
                             <View>
-                                <Text style={styles.timeText}>2pm - 4pm</Text>
-                                <Text style={styles.amountText}>700ml</Text>
+                                <Text style={[styles.timeText, { color: isDarkMode ? '#FFF' : '#555' }]}>2pm - 4pm</Text>
+                                <Text style={[styles.amountText, { color: isDarkMode ? '#FFF' : '#C58BF2' }]}>700ml</Text>
                             </View>
                         </View>
                         <View style={styles.timeUpdate}>
                             <View style={[styles.dot, styles.currentDot]} />
                             <View>
-                                <Text style={styles.timeText}>4pm - now</Text>
-                                <Text style={styles.amountText}>900ml</Text>
+                                <Text style={[styles.timeText, { color: isDarkMode ? '#FFF' : '#555' }]}>4pm - now</Text>
+                                <Text style={[styles.amountText, { color: isDarkMode ? '#FFF' : '#C58BF2' }]}>900ml</Text>
                             </View>
                         </View>
                     </View>

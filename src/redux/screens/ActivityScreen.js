@@ -142,6 +142,8 @@ const ActivityScreen = () => {
     const [tempMinute, setTempMinute] = useState(new Date());
     const [isTracking, setIsTracking] = useState(false);
 
+    console.log('check goa', goals);
+
 
     const navigation = useNavigation();
 
@@ -177,7 +179,7 @@ const ActivityScreen = () => {
             } catch (error) {
                 console.error('Error fetching steps:', error);
             }
-        }, 1000), // Adjust the debounce delay as needed
+        }, 1000),
         [dispatch]
     );
 
@@ -324,7 +326,7 @@ const ActivityScreen = () => {
 
         PushNotification.localNotificationSchedule({
             ticker: "Có thông báo mới",
-            message: "Đến giờ hoạt động!",
+            message: "Đến giờ đi chạy rồi, Đi Chạy Thôi!",
             date: notificationTime,
             allowWhileIdle: true,
             largeIcon: 'img_health',

@@ -67,7 +67,7 @@ export const updateSteps = createAsyncThunk(
 
         // Lấy tài liệu hiện tại (nếu có)
         const doc = await stepsRef.get();
-        console.log('check doc', doc);
+        // console.log('check doc', doc)
 
         if (doc.exists) {
             // Nếu tài liệu tồn tại, cập nhật tổng số bước

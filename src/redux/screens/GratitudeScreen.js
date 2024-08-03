@@ -1,17 +1,21 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, Modal, TextInput, Pressable, Alert } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, Modal, TextInput, Pressable, Alert, Button } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import Icon2 from 'react-native-vector-icons/Ionicons';
 import Icon3 from 'react-native-vector-icons/AntDesign';
 import * as ImagePicker from 'react-native-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { fetchEntries, addEntryToFirestore, deleteEntryFromFirestore, updateEntryInFirestore } from '../actions/gratitudeActions';
+import { fetchEntries, addEntryToFirestore, deleteEntryFromFirestore, updateEntryInFirestore, addSharedEntryToFirestore } from '../actions/gratitudeActions';
 import { useNavigation } from '@react-navigation/native';
 import { addGoalToFirestore, fetchGoals } from '../actions/GoalActions';
 import { Notifications } from 'react-native-notifications';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import storage from '@react-native-firebase/storage';
+import firestore from '@react-native-firebase/firestore';
+import { share } from 'rxjs';
+import { fetchUserInfo } from '../actions/userAction';
+import PushNotification from 'react-native-push-notification';
 
 const GratitudeScreen = () => {
     const navigation = useNavigation();
@@ -25,7 +29,7 @@ const GratitudeScreen = () => {
     const [addModalVisible, setAddModalVisible] = useState(false);
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [editEntryId, setEditEntryId] = useState(null);
-    const currentGoal = goals.find(goal => goal.chức_năng === 'Gratitude') || { mục_tiêu: 0 };
+    const currentGoal = goals.find(goal => goal.function === 'Gratitude') || { target: 0 };
     const [editTitle, setEditTitle] = useState('');
     const [editContent, setEditContent] = useState('');
     const [goalModalVisible, setGoalModalVisible] = useState(false);
@@ -34,8 +38,25 @@ const GratitudeScreen = () => {
     const [reminderTime, setReminderTime] = useState(null);
     const [imageUrl, setImageUrl] = useState(null);
     const [hinhAnh, setHinhAnh] = useState(null);
+    const [modalShareVisible, setModalShareVisible] = useState(false);
+    const [statusText, setStatusText] = useState('');
+    const [selectedEntry, setSelectedEntry] = useState(null);
+    const { userInfo } = useSelector((state) => state.user);
+    const [selectedDate, setSelectedDate] = useState(new Date());
+    const [showTimePicker, setShowTimePicker] = useState(false);
 
-    console.log();
+    console.log('check goal', goals);
+
+
+    useEffect(() => {
+        if (userId) {
+            dispatch(fetchUserInfo(userId));
+        }
+    }, [dispatch, userId]);
+
+    useEffect(() => {
+        configureNotifications();
+    }, [userId]);
 
     useEffect(() => {
         const getUserId = async () => {
@@ -44,7 +65,7 @@ const GratitudeScreen = () => {
                 if (id !== null) {
                     setUserId(id);
                 } else {
-                    console.warn('No userId found in AsyncStorage');
+                    // console.warn('No userId found in AsyncStorage');
                 }
             } catch (error) {
                 console.error('Failed to load userId from AsyncStorage', error);
@@ -54,33 +75,57 @@ const GratitudeScreen = () => {
         getUserId();
     }, []);
 
-    useEffect(() => {
-
-        Notifications.registerRemoteNotifications();
-
-        const notificationReceivedSubscription = Notifications.events().registerNotificationReceivedForeground((notification, completion) => {
-            console.log('Notification received in foreground:', notification);
-            completion({ alert: true, sound: true, badge: false });
+    const configureNotifications = () => {
+        PushNotification.configure({
+            onRegister: function (token) {
+                console.log("TOKEN:", token);
+            },
+            onNotification: function (notification) {
+                Alert.alert('Thông báo', notification.message);
+                notification.finish(PushNotificationIOS.FetchResult.NoData);
+            },
+            popInitialNotification: true,
+            requestPermissions: Platform.OS === 'ios',
         });
 
-        const notificationOpenedSubscription = Notifications.events().registerNotificationOpened((notification, completion) => {
-            console.log('Notification opened:', notification);
-            completion();
+        if (Platform.OS === 'android') {
+            PushNotification.createChannel(
+                {
+                    channelId: 'default-channel-id', // (required)
+                    channelName: 'Default Channel', // (required)
+                    channelDescription: 'A default channel', // (optional)
+                    soundName: 'default', // (optional)
+                    importance: 4, // (optional) - 4 is the highest priority
+                    vibrate: true, // (optional) - if you want vibration
+                    ticker: "Có thông báo mới",
+                },
+                (created) => console.log(`CreateChannel returned '${created}'`) // (optional)
+            );
+        }
+        // scheduleNotification();
+    };
+
+    const scheduleNotification = (hour, minute) => {
+        const now = new Date();
+        const notificationTime = new Date();
+        notificationTime.setHours(hour, minute, 0, 0);
+
+        if (now > notificationTime) {
+            notificationTime.setDate(notificationTime.getDate() + 1); // Lên lịch thông báo vào ngày tiếp theo
+        }
+
+        PushNotification.localNotificationSchedule({
+            ticker: "Có thông báo mới",
+            message: "Đến giờ viết biết ơn rồi, hãy tâm sự nào!",
+            date: notificationTime,
+            allowWhileIdle: true,
+            largeIcon: 'img_health',
+            color: 'green',
+            smallIcon: 'img_health',
+            channelId: 'default-channel-id',
         });
-
-        return () => {
-            notificationReceivedSubscription.remove();
-            notificationOpenedSubscription.remove();
-        };
-    }, []);
-
-    const showTimePicker = () => {
-        setTimePickerVisible(true);
     };
 
-    const hideTimePicker = () => {
-        setTimePickerVisible(false);
-    };
 
     const handleConfirm = (time) => {
         setReminderTime(time);
@@ -88,6 +133,45 @@ const GratitudeScreen = () => {
         scheduleReminder(time);
     };
 
+    const handleSharePress = (entry) => {
+        setSelectedEntry(entry);
+        setModalShareVisible(true);
+    };
+
+    const handleShareSubmit = async () => {
+        const sharedEntry = {
+            ...selectedEntry,
+            nameUser: userInfo.username,
+            avatar: userInfo.avatarUrl || 'https://taytou.com/wp-content/uploads/2022/08/Anh-Avatar-dai-dien-mac-dinh-nam-nen-xam.jpeg',
+            status: statusText,
+            sharedAt: new Date().toISOString(),
+            shareBy: userId,
+
+        };
+
+        console.log('check log 3', sharedEntry);
+
+
+        try {
+            const snapshot = await firestore().collection('sharedEntries')
+                .where('id_user', '==', userId)
+                .where('title', '==', sharedEntry.title)
+                .get();
+
+            if (!snapshot.empty) {
+                Alert.alert('Error', 'You have already shared this entry.');
+                setModalShareVisible(false);
+                setStatusText('');
+                return;
+            }
+
+            dispatch(addSharedEntryToFirestore({ entry: sharedEntry, id_user: userId }));
+            setModalShareVisible(false);
+            setStatusText('');
+        } catch (error) {
+            console.error('Failed to check shared entry', error);
+        }
+    };
     const scheduleReminder = (time) => {
         const notification = {
             title: 'Nhắc nhở viết lời biết ơn',
@@ -99,6 +183,7 @@ const GratitudeScreen = () => {
         Notifications.postLocalNotification(notification);
         Alert.alert('Nhắc nhở đã được thiết lập', 'Bạn sẽ nhận được thông báo vào thời gian bạn đã chọn.');
     };
+
 
 
     useEffect(() => {
@@ -324,13 +409,16 @@ const GratitudeScreen = () => {
         }
 
         const newGoal = {
-            chức_năng: 'Gratitude',
-            mục_tiêu: goal,
-            đơn_vị: 'ngày',
-            ngày_bắt_đầu: startDate,
-            ngày_kết_thúc: endDate.toISOString(),
-            id_user: userId,
+            function: 'Gratitude',
+            target: goal,
+            unit: 'ngày',
+            startDay: startDate,
+            endDay: endDate.toISOString(),
+            userId: userId,
         };
+
+        console.log(newGoal);
+
 
         dispatch(addGoalToFirestore({ goal: newGoal, id_user: userId }))
             .then(() => console.log('Goal added successfully'))
@@ -366,22 +454,50 @@ const GratitudeScreen = () => {
         </Modal>
     );
 
-    console.log('log target', goals.mục_tiêu);
+    const saveRunGoalToFirestore = async (formattedTime) => {
+        const now = new Date();
+        console.log('check goal fb', formattedTime);
+
+        try {
+            await firestore().collection('GratitudeTimes').doc(userId).set({
+                updatedAt: now,
+                notificationTime: formattedTime
+            });
+            console.log("Run goal saved successfully!");
+            // Schedule notifications after saving to Firestore
+            const [hour, minute] = formattedTime.split(':').map(Number);
+            console.log('hour check', hour);
+
+            scheduleNotification(hour, minute);
+        } catch (error) {
+            console.error("Error saving Run goal to Firestore", error);
+        }
+    };
+
 
     const renderItem = ({ item }) => (
-        <Pressable style={styles.card} onPress={() => openEditModal(item)}>
+        <Pressable style={styles.card} onPress={() => openEditModal(item)} key={item.id}>
             <View>
                 <Image source={{ uri: item.image }} style={styles.imgCard} />
                 <Text style={styles.cardTitle}>{item.title}</Text>
                 <Text style={styles.cardContent}>{item.content}</Text>
                 <Text style={styles.cardDate}>Created at {new Date(item.date).toLocaleDateString()}</Text>
             </View>
-            <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => handleDeleteEntry(item.id)}
-            >
-                <Icon name="trash" size={24} color="#fff" />
-            </TouchableOpacity>
+            <View style={{ justifyContent: 'space-between' }}>
+                <TouchableOpacity
+                    style={styles.shareButton}
+                    onPress={() => handleSharePress(item)}
+                >
+                    <Icon3 name="sharealt" size={24} color="#fff" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => handleDeleteEntry(item.id)}
+                >
+                    <Icon name="trash" size={28} color="#fff" />
+                </TouchableOpacity>
+
+            </View>
         </Pressable>
     );
 
@@ -394,11 +510,11 @@ const GratitudeScreen = () => {
 
                 <View style={styles.headerIcons}>
                     <Icon3 name="pushpin" size={24} onPress={() => setGoalModalVisible(true)} color="#000" style={styles.icon} />
-                    <Icon2 onPress={showTimePicker} name="time" size={24} color="#000" style={styles.icon} />
+                    <Icon2 onPress={() => setShowTimePicker(true)} name="time" size={24} color="#000" style={styles.icon} />
 
                     <Image
                         style={styles.profileImage}
-                        source={{ uri: 'https://2sao.vietnamnetjsc.vn/images/2021/04/26/21/17/trai-dep-1.jpg' }}
+                        source={{ uri: userInfo.avatarUrl || 'https://taytou.com/wp-content/uploads/2022/08/Anh-Avatar-dai-dien-mac-dinh-nam-nen-xam.jpeg' }}
                     />
                 </View>
             </View>
@@ -412,7 +528,7 @@ const GratitudeScreen = () => {
             {status === 'loading' && <Text>Đang tải...</Text>}
             {error && <Text style={styles.error}>{error}</Text>}
             <View style={styles.goalSection}>
-                <Text style={styles.goalTitle}>Mục tiêu hiện tại: {currentGoal.mục_tiêu}</Text>
+                <Text style={styles.goalTitle}>Mục tiêu hiện tại: {currentGoal.target}</Text>
 
                 {/* <TouchableOpacity onPress={() => setGoalModalVisible(true)} style={styles.selectGoalButton}>
                     <Text style={styles.selectGoalText}>Chọn Mục Tiêu</Text>
@@ -475,14 +591,51 @@ const GratitudeScreen = () => {
                     </View>
                 </View>
             </Modal>
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={modalShareVisible}
+                onRequestClose={() => setModalShareVisible(false)}
+            >
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Share Entry</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Write your status..."
+                            value={statusText}
+                            onChangeText={setStatusText}
+                        />
+                        <View style={styles.buttonContainer}>
+                            <TouchableOpacity style={styles.button} onPress={handleShareSubmit}>
+                                <Text style={styles.buttonText}>Submit</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={() => setModalShareVisible(false)}>
+                                <Text style={styles.buttonText}>Cancel</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
 
             {renderGoalModal()}
-            <DateTimePickerModal
-                isVisible={isTimePickerVisible}
-                mode="time"
-                onConfirm={handleConfirm}
-                onCancel={hideTimePicker}
-            />
+            {showTimePicker && (
+                <DateTimePicker
+                    value={selectedDate}
+                    mode="time"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={(event, date) => {
+                        if (date) {
+                            setSelectedDate(date);
+                            const formattedTime = `${date.getHours()}:${date.getMinutes()}`;
+                            saveRunGoalToFirestore(formattedTime);
+                            setShowTimePicker(false);
+                        } else {
+                            setShowTimePicker(false);
+                        }
+                    }}
+                />
+            )}
         </View>
     );
 };
@@ -611,6 +764,24 @@ const styles = StyleSheet.create({
         width: '100%',
         // elevation: 7
     },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.5)',
+    },
+    modalContent: {
+        backgroundColor: '#fff',
+        padding: 20,
+        borderRadius: 10,
+        width: '80%',
+        alignItems: 'center',
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 20,
+    },
     btnTask: {
         backgroundColor: '#FFFFFF',
         padding: 10,
@@ -684,6 +855,25 @@ const styles = StyleSheet.create({
     },
     goalText: {
         fontSize: 16,
+    },
+    buttonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    button: {
+        flex: 1,
+        backgroundColor: '#2196F3',
+        borderRadius: 5,
+        padding: 10,
+        alignItems: 'center',
+        marginHorizontal: 5,
+    },
+    cancelButton: {
+        backgroundColor: 'red',
+    },
+    buttonText: {
+        color: 'white',
+        fontWeight: 'bold',
     },
 });
 

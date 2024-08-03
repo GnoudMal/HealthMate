@@ -14,7 +14,7 @@ const screenWidth = Dimensions.get('window').width;
 
 const SleepScreen = ({ navigation }) => {
     const [userId, setUserId] = useState(null);
-    const [sleepData, setSleepData] = useState([0, 0, 0, 0, 0, 0, 0]);
+    const [sleepData, setSleepData] = useState(Array(7).fill(0));
     const [sleepGoal, setSleepGoal] = useState({ start: '22:00', end: '06:00' });
     const [isSettingGoal, setIsSettingGoal] = useState(false);
     const [tempStart, setTempStart] = useState(new Date());
@@ -97,22 +97,34 @@ const SleepScreen = ({ navigation }) => {
         // scheduleNotification();
     };
 
+    const generateLabels = () => {
+        const today = new Date();
+        const daysOfWeek = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+        let labels = [];
+
+        for (let i = 6; i >= 0; i--) {
+            const day = new Date();
+            day.setDate(today.getDate() - i);
+            labels.push(daysOfWeek[day.getDay()]);
+        }
+
+        return labels;
+    };
+
     const fetchSleepData = async () => {
         if (userId) {
             try {
                 const now = new Date();
-                const startOfWeek = now.getDate() - now.getDay(); // Chủ nhật
-                const startDate = new Date(now.setDate(startOfWeek));
-                const endDate = new Date(startDate);
-                endDate.setDate(endDate.getDate() + 6); // Thứ bảy
+                const startDate = new Date();
+                startDate.setDate(now.getDate() - 6); // Lấy dữ liệu từ 6 ngày trước đến hôm nay
 
                 const snapshot = await firestore().collection('sleepRecords')
                     .where('userId', '==', userId)
                     .where('createdAt', '>=', startDate)
-                    .where('createdAt', '<=', endDate)
+                    .where('createdAt', '<=', now)
                     .get();
 
-                const weeklyData = [0, 0, 0, 0, 0, 0, 0]; // Mặc định 0 giờ cho mỗi ngày trong tuần
+                const weeklyData = Array(7).fill(0); // Khởi tạo mảng 7 phần tử với giá trị 0
 
                 snapshot.docs.forEach(doc => {
                     const data = doc.data();
@@ -121,8 +133,8 @@ const SleepScreen = ({ navigation }) => {
                         const endTime = new Date(data.endTime);
                         const duration = (endTime - startTime) / 1000 / 3600; // Tính giờ
 
-                        const dayOfWeek = startTime.getDay();
-                        weeklyData[dayOfWeek] += duration;
+                        const dayIndex = (startTime.getDay() - startDate.getDay() + 7) % 7;
+                        weeklyData[dayIndex] += duration;
                     }
                 });
 
@@ -134,6 +146,7 @@ const SleepScreen = ({ navigation }) => {
             }
         }
     };
+
 
 
     const saveSleepGoalToFirestore = async (startTime, endTime) => {
@@ -203,12 +216,17 @@ const SleepScreen = ({ navigation }) => {
     };
 
     const checkSleepAdequacy = () => {
-        const lastNightSleep = sleepData[sleepData.length - 1];
+        const lastNightSleep = sleepData[sleepData.length - 2];
+        const formattedSleep = lastNightSleep.toFixed(2);
+        console.log('sleep data check', formattedSleep);
+
         console.log(lastNightSleep);
         if (lastNightSleep >= 6 && lastNightSleep <= 7.5) {
-            Alert.alert("Thông báo", "Bạn đã ngủ đủ giấc đêm qua!");
+            Alert.alert("Thông báo", "Bạn đã ngủ đủ giấc đêm qua! " + formattedSleep + ' tiếng');
+        } else if (lastNightSleep >= 7.5) {
+            Alert.alert("Thông báo", "Bạn đã ngủ quá nhiều vào đêm qua! " + formattedSleep + ' tiếng');
         } else {
-            Alert.alert("Thông báo", "Bạn không ngủ đủ giấc đêm qua!");
+            Alert.alert("Thông báo", "Bạn không ngủ đủ giấc đêm qua! " + formattedSleep + ' tiếng');
         }
     };
 
@@ -279,13 +297,13 @@ const SleepScreen = ({ navigation }) => {
 
     const getLastNightSleep = () => {
         const today = new Date();
-        const dayOfWeek = today.getDay(); // Sunday = 0, Monday = 1, ..., Saturday = 6
+        const dayOfWeek = today.getDay();
 
         // Nếu hôm nay là Chủ Nhật (0), thì ngày hôm qua là Thứ Bảy (6)
         // Ngược lại, ngày hôm qua là ngày hiện tại trừ 1
-        const lastNightIndex = (dayOfWeek === 0) ? 6 : dayOfWeek - 1;
+        const lastNightIndex = 6;
 
-        return sleepData[lastNightIndex];
+        return sleepData[lastNightIndex - 1];
     };
 
     const getSleepMessage = () => {
@@ -359,7 +377,7 @@ const SleepScreen = ({ navigation }) => {
                 )}
                 <LineChart
                     data={{
-                        labels: ["CN", "T2", "T3", "T4", "T5", "T6", "T7"],
+                        labels: generateLabels(),
                         datasets: [{ data: sleepData }]
                     }}
                     width={screenWidth - 40}

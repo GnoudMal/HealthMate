@@ -16,6 +16,7 @@ import TrackPlayer, {
 } from 'react-native-track-player';
 import { setupPlayer, addTracks } from '../../service/servicePlay';
 import { fetchTracks } from '../../redux/reducers/trackReducer'; // Điều chỉnh đường dẫn
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 function Playlist() {
     const MAX_DISPLAY_ITEMS = 3;
@@ -23,10 +24,35 @@ function Playlist() {
     const firestoreTracks = useSelector(state => state.track.tracks);
     const [currentTrack, setCurrentTrack] = useState(null);
     const [displayCount, setDisplayCount] = useState(MAX_DISPLAY_ITEMS);
+    const [userId, setUserId] = useState(null);
 
     const handleLoadMore = () => {
         setDisplayCount(prevCount => prevCount + MAX_DISPLAY_ITEMS);
     };
+
+    useEffect(() => {
+        const getUserId = async () => {
+            try {
+                const id = await AsyncStorage.getItem('userId');
+                if (id !== null) {
+                    setUserId(id);
+                } else {
+                    console.warn('No userId found in AsyncStorage');
+                }
+            } catch (error) {
+                console.error('Failed to load userId from AsyncStorage', error);
+            }
+        };
+
+        getUserId();
+    }, []);
+
+
+    useEffect(() => {
+        if (userId) {
+            dispatch(fetchTracks({ userId }));
+        }
+    }, [userId]);
 
     // Bài hát preload
     const preloadedTracks = [
@@ -56,8 +82,7 @@ function Playlist() {
             if (isSetup) {
                 console.log('Player setup completed. Adding tracks...');
                 await addTracks(); // Thêm bài nhạc preload và từ Firebase
-                dispatch(fetchTracks()); // Fetch tracks after adding
-                console.log('Tracks added and fetched.');
+                console.log('Tracks added and fetched.' + firestoreTracks);
             } else {
                 console.log('Player setup failed.');
             }

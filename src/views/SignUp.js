@@ -57,7 +57,7 @@ const SignUp = ({ navigation }) => {
                 role: 'User',
                 createdAt: new Date().toISOString(),
             });
-
+            console.log('dang ky thanh cong');
             Alert.alert('Sign Up Successful', `Welcome, ${user.email}`);
             navigation.navigate('LoginAccount', { email: email, password: password }); // Pass the email and password
         } catch (error) {
