@@ -165,16 +165,16 @@ const LoginAccount = ({ navigation, route }) => {
                 </ImageBackground>
 
                 <Animated.View style={[styles.formContainer, { transform: [{ translateY: yPosition }] }]}>
-                    <Text style={styles.loginText}>Login to your account to continue</Text>
+                    <Text style={styles.loginText}>Đăng nhập vào tài khoản để tiếp tục</Text>
 
                     <View style={styles.inputContainerLogin}>
                         <View style={styles.labelContainer}>
-                            <Text style={styles.labelText}>Enter your Email address</Text>
+                            <Text style={styles.labelText}>Email</Text>
                         </View>
                         <Icon name="email" size={20} color="#8E8E93" style={styles.icon} />
                         <TextInput
                             style={styles.input}
-                            placeholder="Enter your Email address"
+                            placeholder="Nhập vào email của bạn"
                             keyboardType="email-address"
                             value={email}
                             onChangeText={setEmail}
@@ -183,12 +183,12 @@ const LoginAccount = ({ navigation, route }) => {
 
                     <View style={styles.inputContainer}>
                         <View style={styles.labelContainer}>
-                            <Text style={styles.labelText}>Enter your Password</Text>
+                            <Text style={styles.labelText}>Mật Khẩu</Text>
                         </View>
                         <Icon name="lock" size={20} color="#8E8E93" style={styles.icon} />
                         <TextInput
                             style={styles.input}
-                            placeholder="Enter your Password"
+                            placeholder="Nhập vào mật khẩu của bạn"
                             value={password}
                             onChangeText={setPassword}
                             secureTextEntry={secureTextEntry}
@@ -220,7 +220,7 @@ const LoginAccount = ({ navigation, route }) => {
                         style={[styles.signInButton, { backgroundColor: rememberMe ? '#FFA500' : '#AFC18E' }]}
                         onPress={handleLogin}
                     >
-                        <Text style={styles.signInButtonText}>Sign In</Text>
+                        <Text style={styles.signInButtonText}>Đăng Nhập</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={styles.forgotPasswordButton}
@@ -241,11 +241,11 @@ const LoginAccount = ({ navigation, route }) => {
                             { cancelable: false }
                         )}
                     >
-                        <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                        <Text style={styles.forgotPasswordText}>Quên Mật Khẩu?</Text>
                     </TouchableOpacity>
                     <Text style={styles.signUpText}>
-                        Don’t have an account yet?
-                        <Text style={styles.signUpLink} onPress={() => navigation.navigate('SignUp')}> Sign Up</Text>
+                        Bạn Chưa Có Tài khoản?
+                        <Text style={styles.signUpLink} onPress={() => navigation.navigate('SignUp')}> Đăng Ký</Text>
                     </Text>
                 </Animated.View>
 

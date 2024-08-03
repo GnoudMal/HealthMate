@@ -40,6 +40,39 @@ export const fetchSteps = createAsyncThunk('steps/fetchSteps', async (userId) =>
     console.log('Fetched steps data:', stepsData);
     return stepsData;
 });
+
+export const fetchStepsForMonth = createAsyncThunk('steps/fetchStepsForMonth', async (userId, { rejectWithValue }) => {
+    try {
+        const today = new Date();
+        const startOfMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        const endOfMonth = new Date(today.getFullYear(), today.getMonth(), 0, 23, 59, 59, 999);
+
+        const startTimestamp = convertDateToFirestoreTimestamp(startOfMonth);
+        const endTimestamp = convertDateToFirestoreTimestamp(endOfMonth);
+
+        const snapshot = await firestore().collection('steps')
+            .where('userId', '==', userId)
+            .where('timestamp', '>=', startTimestamp)
+            .where('timestamp', '<=', endTimestamp)
+            .get();
+
+        const stepsData = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                ...data,
+                timestamp: convertTimestamp(data.timestamp),
+            };
+        });
+
+        console.log('Fetched steps data 2:', stepsData);
+
+        return stepsData;
+    } catch (error) {
+        console.error('Error fetching steps for month:', error);
+        return rejectWithValue(error.message);
+    }
+});
+
 // Add steps to Firestore
 export const addStepsToFirestore = createAsyncThunk('steps/addStepsToFirestore', async ({ steps, id_user }) => {
     const newStep = await firestore().collection('steps').add({ steps, id_user, timestamp: new Date() });

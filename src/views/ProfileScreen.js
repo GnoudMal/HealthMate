@@ -210,7 +210,7 @@ const ProfileScreen = ({ navigation }) => {
                 {isExpert && (
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>Consultation Fields</Text>
-                        {['Ăn Uống', 'Tâm Lý', 'Sức Khỏe', 'Tinh Thần'].map(field => (
+                        {['Ăn Uống', 'Tâm Lý', 'Sức Khỏe', 'Tinh Thần', 'Tập Luyện Thể Thao'].map(field => (
                             <View key={field} style={styles.sectionItem}>
                                 <CheckBox
                                     value={selectedFields.includes(field)}

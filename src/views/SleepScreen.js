@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button, Alert, StyleSheet, Platform, Touchable, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { View, Text, Button, Alert, StyleSheet, Platform, Touchable, TouchableOpacity, Image, ScrollView, PushNotificationIOS } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import PushNotification from 'react-native-push-notification';
 import { Dimensions } from 'react-native';
@@ -9,6 +9,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/Ionicons';
+import auth from '@react-native-firebase/auth';
+
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -73,8 +75,19 @@ const SleepScreen = ({ navigation }) => {
                 console.log("TOKEN:", token);
             },
             onNotification: function (notification) {
+                console.log('no ti', notification);
+
                 Alert.alert('Thông báo', notification.message);
-                notification.finish(PushNotificationIOS.FetchResult.NoData);
+
+                navigation.navigate("SleepScreen");
+
+                if (notification.data && notification.data.type === 'sleep') {
+                    console.log('alo 1 2 3 ');
+                    updateFirestoreNotification(userId, "Đã đến giờ đi ngủ!", 'sleep', notification.data.time);
+                } else if (notification.data && notification.data.type === 'wake-up') {
+                    updateFirestoreNotification(userId, "Đã đến giờ thức dậy!", 'wake-up', notification.data.time);
+                }
+                // notification.finish(PushNotificationIOS.FetchResult.NoData);
             },
             popInitialNotification: true,
             requestPermissions: Platform.OS === 'ios',
@@ -95,6 +108,23 @@ const SleepScreen = ({ navigation }) => {
             );
         }
         // scheduleNotification();
+    };
+
+    const updateFirestoreNotification = async (userId, content, type, time) => {
+        try {
+            await firestore().collection('Users').doc(userId).update({
+                notifications: firestore.FieldValue.arrayUnion({
+                    content,
+                    createdAt: new Date().toISOString(),
+                    type,
+                    from: 'SleepScreen',
+                    date: time
+                })
+            });
+            console.log('Notification saved to Firestore');
+        } catch (error) {
+            console.error('Error saving notification to Firestore:', error);
+        }
     };
 
     const generateLabels = () => {
@@ -165,7 +195,7 @@ const SleepScreen = ({ navigation }) => {
         }
     };
 
-    const scheduleNotification = (startTime, endTime) => {
+    const scheduleNotification = async (startTime, endTime) => {
         const [startHour, startMinute] = startTime.split(':').map(Number);
         const [endHour, endMinute] = endTime.split(':').map(Number);
 
@@ -180,6 +210,8 @@ const SleepScreen = ({ navigation }) => {
             sleepTime.setDate(sleepTime.getDate() + 1);
         }
 
+        const userId = auth().currentUser.uid;
+
         PushNotification.localNotificationSchedule({
             ticker: "Có thông báo mới",
             message: "Đã đến giờ đi ngủ!",
@@ -189,6 +221,7 @@ const SleepScreen = ({ navigation }) => {
             color: 'green',
             smallIcon: 'img_health',
             channelId: 'default-channel-id',
+            data: { type: 'sleep', time: sleepTime.toISOString() }
         });
 
         PushNotification.localNotificationSchedule({
@@ -200,6 +233,7 @@ const SleepScreen = ({ navigation }) => {
             color: 'green',
             smallIcon: 'img_health',
             channelId: 'default-channel-id',
+            data: { type: 'wake-up', time: wakeUpTime.toISOString() }
         });
     };
 

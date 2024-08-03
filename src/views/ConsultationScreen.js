@@ -79,6 +79,9 @@ const ConsultationForm = ({ navigation }) => {
                 <Picker style={{ backgroundColor: 'white', marginTop: 10 }} selectedValue={field} onValueChange={(itemValue) => setField(itemValue)}>
                     <Picker.Item label="Tinh Thần" value="Tinh Thần" />
                     <Picker.Item label="Sức khỏe" value="Sức Khỏe" />
+                    <Picker.Item label="Ăn Uống" value="Ăn Uống" />
+                    <Picker.Item label="Tâm Lý" value="Tâm Lý" />
+                    <Picker.Item label="Tập Luyện Thể Thao" value="Tập Luyện Thể Thao" />
                 </Picker>
             </View>
             <View style={{ backgroundColor: 'rgba(198, 188, 239, 0.6)', borderRadius: 12, padding: 10 }}>

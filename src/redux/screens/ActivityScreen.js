@@ -9,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import PushNotification from 'react-native-push-notification';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import firestore from '@react-native-firebase/firestore';
-import { fetchSteps } from '../actions/stepActions';
+import { fetchSteps, fetchStepsForMonth } from '../actions/stepActions';
 import { useNavigation } from '@react-navigation/native';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import LottieView from 'lottie-react-native';
@@ -67,13 +67,13 @@ const CircularProgress = ({ size, strokeWidth, percentage, innerText }) => {
 
 const Summary = ({ stepsCount, goalText, distanceFromTargetSteps, caloriesFromSteps, caloriesFromDistance, handleGoalUpdate, goalReached }) => (
     <View style={styles.summarySection}>
-        <Text style={styles.summaryTitle}>Summary</Text>
+        <Text style={styles.summaryTitle}>Tổng Quan</Text>
         <View style={{ marginBottom: 10, alignSelf: 'flex-start' }}>
             <Text style={styles.calories}>
-                {caloriesFromSteps} <Text style={styles.caloriesLabel}>Kcal - Steps</Text>
+                {caloriesFromSteps} <Text style={styles.caloriesLabel}>Kcal - Bước</Text>
             </Text>
             <Text style={styles.calories}>
-                {caloriesFromDistance} <Text style={styles.caloriesLabel}>Kcal - Distance</Text>
+                {caloriesFromDistance} <Text style={styles.caloriesLabel}>Kcal - Quãng Đường đã đi</Text>
             </Text>
         </View>
         <CircularProgress
@@ -82,39 +82,51 @@ const Summary = ({ stepsCount, goalText, distanceFromTargetSteps, caloriesFromSt
             percentage={goalText > 0 ? (stepsCount / goalText) * 100 : 0}
             innerText={`${Math.round((stepsCount / goalText) * 100)}%`}
         />
-        <Text style={{ fontSize: 20, color: 'white', alignSelf: 'flex-start', fontWeight: 'bold', marginTop: 10 }}>+ My Target:</Text>
+        <Text style={{ fontSize: 20, color: 'white', alignSelf: 'flex-start', fontWeight: 'bold', marginTop: 10 }}>+ Mục Tiêu của tôi:</Text>
         <View style={styles.stats}>
             <View style={styles.statBox}>
                 <Text style={styles.statValue}>{goalText}</Text>
-                <Text style={styles.statLabel}>Steps</Text>
+                <Text style={styles.statLabel}>Bước</Text>
             </View>
             <View style={styles.statBox}>
                 <Text style={styles.statValue}>{distanceFromTargetSteps}</Text>
-                <Text style={styles.statLabel}>Distance (KM)</Text>
+                <Text style={styles.statLabel}>Khoảng Cách (KM)</Text>
             </View>
         </View>
         <View style={styles.actionSection}>
             <TouchableOpacity style={styles.btnUpdateGoal} onPress={() => handleGoalUpdate(1000)} >
-                <Text style={{ fontSize: 16, fontWeight: '700' }}>Update Goal</Text>
+                <Text style={{ fontSize: 16, fontWeight: '700' }}>Cập Nhật Mục Tiêu</Text>
             </TouchableOpacity>
             <Text style={styles.actionText}>
-                {goalReached ? 'Goal Achieved!' : 'Keep Going!'}
+                {goalReached ? 'Hoàn Thành Mục Tiêu!' : 'Đừng Bỏ Cuộc!'}
             </Text>
         </View>
     </View>
 );
 
-const Recent = () => (
+const Recent = ({ stepsForMonth, caloriesForMonth, distanceForMonth }) => (
     <View style={styles.summarySection}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start' }}>
+        {/* <View style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start' }}>
             <Icon name="partly-sunny" size={32} color="orange" />
             <Text style={{ color: 'white', fontSize: 17, fontWeight: '800', marginStart: 5 }}>Có Nắng</Text>
             <Text style={{ color: 'white', fontSize: 17, fontWeight: '800', marginStart: 5 }}>- 34℃</Text>
         </View>
         <Text style={[styles.calories, { alignSelf: 'flex-start' }]}>
             Hà Nội <Text style={styles.caloriesLabel}>- Phú Đô</Text>
-        </Text>
-        <Text style={{ color: 'white', fontSize: 17, fontWeight: '800', marginTop: 20 }}> Bạn Đang Chạy Với Tốc Độ: 6:30/KM</Text>
+        </Text> */}
+        <View style={styles.containerTotalMonth}>
+            <View style={styles.cardMonth}>
+                <Text style={styles.textMonth}>
+                    Bạn Đã Đi: {stepsForMonth} Bước = {distanceForMonth} KM Trong một tháng qua
+                </Text>
+            </View>
+            <View style={styles.cardMonth}>
+                <Text style={styles.textMonth}>
+                    Đốt Cháy: {caloriesForMonth} Calories Trong 1 Tháng Qua
+                </Text>
+            </View>
+        </View>
+
         <LottieView
             source={require('../../animation/Run2.json')}
             autoPlay
@@ -141,16 +153,29 @@ const ActivityScreen = () => {
     const [tempHour, setTempHour] = useState(new Date());
     const [tempMinute, setTempMinute] = useState(new Date());
     const [isTracking, setIsTracking] = useState(false);
+    const stepsForMonth = useSelector((state) => {
+        console.log('stepsForMonth in slice:', state.steps.monthlySteps);
+        return state.steps.monthlySteps
+    });
+    const [totalStepsForMonth, setTotalStepsForMonth] = useState(0);
 
-    console.log('check goa', goals);
+    useEffect(() => {
+        const newTotalSteps = stepsForMonth.reduce((total, entry) => total + entry.steps, 0);
+        setTotalStepsForMonth(newTotalSteps);
+    }, [stepsForMonth]);
+
+
+
+    console.log('stepsForMonth in component:', totalStepsForMonth);
+
 
 
     const navigation = useNavigation();
 
     const [index, setIndex] = useState(0);
     const [routes] = useState([
-        { key: 'summary', title: 'Summary' },
-        { key: 'another', title: 'Activity' },
+        { key: 'summary', title: 'Tổng Quan' },
+        { key: 'another', title: 'Hoạt Động' },
     ]);
 
     const renderScene = SceneMap({
@@ -166,7 +191,9 @@ const ActivityScreen = () => {
             />
         ),
         another: () => (
-            <Recent />
+            <Recent stepsForMonth={totalStepsForMonth}
+                caloriesForMonth={caloriesFromStepMonth}
+                distanceForMonth={distanceMonth} />
         ),
     });
 
@@ -176,11 +203,12 @@ const ActivityScreen = () => {
         _.debounce(async (userId) => {
             try {
                 await dispatch(fetchSteps(userId));
+                await dispatch(fetchStepsForMonth(userId));
             } catch (error) {
                 console.error('Error fetching steps:', error);
             }
         }, 1000),
-        [dispatch]
+        [dispatch, fetchStepsForMonth]
     );
 
     useEffect(() => {
@@ -285,16 +313,22 @@ const ActivityScreen = () => {
     console.log('day a', stepsObject);
     // console.log(stepsCount);
 
-    const calculateCalories = (steps, distance) => {
+    const calculateCalories = (steps, distance, caloriesMonth) => {
         const caloriesPerStep = 0.04;
         const caloriesPerKm = 100;
 
+
+
         const caloriesFromSteps = (steps * caloriesPerStep).toFixed(2);
         const caloriesFromDistance = (distance * caloriesPerKm).toFixed(2);
+        const caloriesFromStepMonth = (caloriesMonth * caloriesPerStep).toFixed(2);
 
+
+        console.log(caloriesFromStepMonth);
         return {
             caloriesFromSteps,
-            caloriesFromDistance
+            caloriesFromDistance,
+            caloriesFromStepMonth
         };
     };
 
@@ -311,7 +345,8 @@ const ActivityScreen = () => {
 
     const stepsCount = stepsObject && typeof stepsObject.steps === 'number' ? stepsObject.steps : stepsObject.steps.steps;
     const distanceToday = calculateDistanceFromSteps(stepsCount);
-    const { caloriesFromSteps, caloriesFromDistance } = calculateCalories(stepsCount, distanceToday);
+    const distanceMonth = calculateDistanceFromSteps(totalStepsForMonth);
+    const { caloriesFromSteps, caloriesFromDistance, caloriesFromStepMonth } = calculateCalories(stepsCount, distanceToday, totalStepsForMonth);
     const distanceFromTargetSteps = calculateDistanceFromSteps(goalText);
 
 
@@ -390,12 +425,12 @@ const ActivityScreen = () => {
 
                 <View style={styles.runSection}>
                     <View>
-                        <Text style={styles.runTitle}>Today Run</Text>
+                        <Text style={styles.runTitle}>Hôm nay đi được</Text>
                         <Text style={styles.runDistance}>{distanceToday} KM</Text>
                     </View>
                     <View>
-                        <Text style={styles.runTitle}>Today Steps</Text>
-                        <Text style={styles.runDistance}>{stepsCount} Steps</Text>
+                        <Text style={styles.runTitle}>Số bước hôm nay</Text>
+                        <Text style={styles.runDistance}>{stepsCount} Bước</Text>
                     </View>
                 </View>
 
@@ -457,7 +492,7 @@ const styles = StyleSheet.create({
     },
     animation: {
         width: '100%',
-        height: 500,
+        height: 400,
     },
     btnNotify: {
         padding: 7,
@@ -512,7 +547,7 @@ const styles = StyleSheet.create({
     },
     summaryTitle: {
         color: '#fff',
-        fontSize: 17,
+        fontSize: 18,
         fontWeight: '700',
         marginBottom: 8,
         alignSelf: 'flex-start'
@@ -595,6 +630,28 @@ const styles = StyleSheet.create({
     trackButtonText: {
         fontSize: 16,
         color: 'white',
+    },
+    containerTotalMonth: {
+        flexDirection: 'column', // Hoặc 'row' nếu bạn muốn các phần tử nằm ngang
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 10,
+
+    },
+    cardMonth: {
+        width: '90%',
+        borderRadius: 15,
+        backgroundColor: 'rgba(218, 174, 249, 0.8)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 10,
+        marginBottom: 10, // Khoảng cách giữa các card
+    },
+    textMonth: {
+        color: 'white',
+        fontSize: 17,
+        fontWeight: '800',
+        textAlign: 'center', // Canh giữa văn bản
     },
 });
 

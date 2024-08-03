@@ -1,10 +1,11 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchSteps, addStepsToFirestore, deleteStepsFromFirestore, updateStepsInFirestore, updateSteps } from '../actions/stepActions';
+import { fetchSteps, addStepsToFirestore, deleteStepsFromFirestore, updateStepsInFirestore, updateSteps, fetchStepsForMonth } from '../actions/stepActions';
 
 const stepSlice = createSlice({
     name: 'steps',
     initialState: {
         steps: 0,
+        monthlySteps: [],
         error: null,
         status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
     },
@@ -44,6 +45,18 @@ const stepSlice = createSlice({
             }).
             addCase(updateSteps.fulfilled, (state, action) => {
                 state.steps = action.payload.steps; // Nếu payload chứa `steps`
+            }).
+            addCase(fetchStepsForMonth.pending, (state) => {
+                state.status = 'loading';
+            })
+            .addCase(fetchStepsForMonth.fulfilled, (state, action) => {
+                state.status = 'succeeded';
+                state.monthlySteps = action.payload; // Update state with monthly steps
+                console.log('Cập nhật stepsForMonth trong slice:', state.monthlySteps);
+            })
+            .addCase(fetchStepsForMonth.rejected, (state, action) => {
+                state.status = 'failed';
+                state.error = action.error.message;
             });
     },
 });

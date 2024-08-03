@@ -31,6 +31,8 @@ import FriendScreen from './FriendScreen';
 import FriendsListScreen from './FriendsList';
 import SocialScreen from './SocialScreen';
 import { ThemeContext } from '../service/ThemeContext';
+import NotificationsScreen from './StatsScreen';
+import SleepScreen from './SleepScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -47,8 +49,8 @@ const HomeTabs = () => {
 
                     if (route.name === 'Home') {
                         iconName = focused ? 'home' : 'home';
-                    } else if (route.name === 'Stats') {
-                        iconName = focused ? 'bar-chart' : 'bar-chart';
+                    } else if (route.name === 'notifications') {
+                        iconName = focused ? 'notifications-none' : 'notifications-none';
                     } else if (route.name === 'Social') {
                         iconName = focused ? 'earth-outline' : 'earth-outline';
                     } else if (route.name === 'Consultation') {
@@ -75,7 +77,7 @@ const HomeTabs = () => {
             })}
         >
             <Tab.Screen name="Home" component={HomeScreen} />
-            <Tab.Screen name="Stats" component={StatsScreen} />
+            <Tab.Screen name="notifications" component={NotificationsScreen} />
             <Tab.Screen
                 name="SocialScreen"
                 component={SocialScreen}
@@ -112,7 +114,7 @@ const RootComponent = () => {
                     <Stack.Screen name="HomeScreen" component={HomeTabs} />
                     <Stack.Screen name="AdditionalInfoScreen" component={AdditionalInfoScreen} />
                     <Stack.Screen name="MindScreen" component={MindScreen} />
-                    <Stack.Screen name="SleepTracking" component={SleepTracking} />
+                    <Stack.Screen name="SleepScreen" component={SleepScreen} />
                     <Stack.Screen name="HealthScreen" component={HealthScreen} />
                     <Stack.Screen name="PhysicalScreen" component={PhysicalScreen} />
                     <Stack.Screen name="MentalHealthScreen" component={MentalHealthScreen} />

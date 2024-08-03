@@ -477,26 +477,28 @@ const GratitudeScreen = () => {
 
     const renderItem = ({ item }) => (
         <Pressable style={styles.card} onPress={() => openEditModal(item)} key={item.id}>
-            <View>
-                <Image source={{ uri: item.image }} style={styles.imgCard} />
-                <Text style={styles.cardTitle}>{item.title}</Text>
-                <Text style={styles.cardContent}>{item.content}</Text>
-                <Text style={styles.cardDate}>Created at {new Date(item.date).toLocaleDateString()}</Text>
-            </View>
-            <View style={{ justifyContent: 'space-between' }}>
-                <TouchableOpacity
-                    style={styles.shareButton}
-                    onPress={() => handleSharePress(item)}
-                >
-                    <Icon3 name="sharealt" size={24} color="#fff" />
-                </TouchableOpacity>
+            <Image source={{ uri: item.image }} style={styles.imgCard} />
+            <View style={styles.cardContentContainer}>
+                <View style={styles.textContainer}>
+                    <Text style={styles.cardTitle}>{item.title}</Text>
+                    <Text style={styles.cardContent}>{item.content}</Text>
+                    <Text style={styles.cardDate}>Created at {new Date(item.date).toLocaleDateString()}</Text>
+                </View>
+                <View style={styles.buttonContainerEntry}>
+                    <TouchableOpacity
+                        style={styles.shareButton}
+                        onPress={() => handleSharePress(item)}
+                    >
+                        <Icon3 name="sharealt" size={24} color="#fff" />
+                    </TouchableOpacity>
+                    {/* Uncomment this if you want to add a delete button
                 <TouchableOpacity
                     style={styles.deleteButton}
                     onPress={() => handleDeleteEntry(item.id)}
                 >
                     <Icon name="trash" size={28} color="#fff" />
-                </TouchableOpacity>
-
+                </TouchableOpacity> */}
+                </View>
             </View>
         </Pressable>
     );
@@ -647,11 +649,25 @@ const styles = StyleSheet.create({
         paddingTop: 40,
         paddingHorizontal: 20,
     },
+    shareButton: {
+        // backgroundColor: '#1e90ff',
+
+        borderRadius: 20,
+        padding: 10,
+        marginLeft: 10,
+    },
     imgCard: {
-        width: 200,
-        height: 200,
-        borderRadius: 50,
-        marginBottom: 20,
+        width: 100,
+        height: 100,
+        borderRadius: 10,
+        marginRight: 10,
+    },
+    cardContentContainer: {
+        flex: 1,
+        justifyContent: 'space-between',
+    },
+    textContainer: {
+        flex: 1,
     },
     header: {
         flexDirection: 'row',
@@ -698,26 +714,32 @@ const styles = StyleSheet.create({
         paddingBottom: 100,
     },
     card: {
-        justifyContent: 'space-between',
         flexDirection: 'row',
+        marginBottom: 10,
+        padding: 10,
         backgroundColor: '#FF6F61',
         borderRadius: 10,
-        padding: 20,
-        marginVertical: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 2,
+        elevation: 2,
     },
     cardTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
+        marginRight: 40,
         color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginBottom: 5,
     },
     cardContent: {
-        fontSize: 16,
-        color: '#fff',
-        marginVertical: 10,
-    },
-    cardDate: {
         fontSize: 14,
         color: '#fff',
+        marginBottom: 10,
+    },
+    cardDate: {
+        fontSize: 12,
+        color: '#fff'
     },
     fab: {
         position: 'absolute',
@@ -856,10 +878,19 @@ const styles = StyleSheet.create({
     goalText: {
         fontSize: 16,
     },
+    buttonContainerEntry: {
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        zIndex: 1000,
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+    },
     buttonContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        justifyContent: 'flex-end',
     },
+
     button: {
         flex: 1,
         backgroundColor: '#2196F3',

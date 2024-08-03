@@ -44,7 +44,7 @@ const StepsComponent = () => {
         <View style={styles.container}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <Icon name={'foot'} size={24} color="black" />
-                <Text style={styles.stepsCount}> {stepsObject} <Text style={{ color: "#36454F" }}>Steps</Text></Text>
+                <Text style={styles.stepsCount}> {stepsObject} <Text style={{ color: "#36454F" }}>Bước</Text></Text>
             </View>
             <View style={styles.progressBarBackground}>
                 <View style={styles.progressBarFill1} />

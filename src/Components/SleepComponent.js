@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { LineChart } from 'react-native-chart-kit';
+import { BarChart, LineChart } from 'react-native-chart-kit';
 import firestore from '@react-native-firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemeContext } from '../service/ThemeContext';
@@ -105,7 +105,14 @@ const SleepComponent = () => {
         fillShadowGradientOpacity: 1,
         withVerticalLabels: true,
         withHorizontalLabels: true,
+        decimalPlaces: 2,
         labelFormatter: (value) => `${value.toFixed(2)}h`,
+        propsForDots: {
+            r: "4",
+            strokeWidth: "1",
+            stroke: "#ffa726"
+        }
+
     };
 
     return (
@@ -113,7 +120,7 @@ const SleepComponent = () => {
             <View style={{ flexDirection: 'row' }}>
                 <Icon name={'moon'} size={24} color="black" />
                 <View style={{ marginStart: 5 }}>
-                    <Text style={styles.title}>Sleep</Text>
+                    <Text style={styles.title}>Giấc Ngủ</Text>
                     <Text style={styles.sleepTime}>{todaySleepTime}</Text>
                 </View>
             </View>
@@ -134,6 +141,8 @@ const SleepComponent = () => {
                         borderRadius: 10,
                         alignSelf: 'flex-start',
                     }}
+                    bezier
+                    yAxisSuffix=" h"
                 />
             </View>
         </View>

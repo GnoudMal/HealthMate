@@ -83,16 +83,16 @@ const SignUp = ({ navigation }) => {
                     </Animated.View>
                 </ImageBackground>
                 <Animated.View style={[styles.formContainer, { transform: [{ translateY: yPosition }] }]}>
-                    <Text style={styles.loginText}>Create your account</Text>
+                    <Text style={styles.loginText}>Tạo Tài Khoản</Text>
 
                     <View style={styles.inputContainerLogin}>
                         <View style={styles.labelContainer}>
-                            <Text style={styles.labelText}>Enter your Email address</Text>
+                            <Text style={styles.labelText}>Email</Text>
                         </View>
                         <Icon name="email" size={20} color="#8E8E93" style={styles.icon} />
                         <TextInput
                             style={styles.input}
-                            placeholder="Enter your Email address"
+                            placeholder="Nhập vào email"
                             keyboardType="email-address"
                             value={email}
                             onChangeText={setEmail}
@@ -101,12 +101,12 @@ const SignUp = ({ navigation }) => {
 
                     <View style={styles.inputContainer}>
                         <View style={styles.labelContainer}>
-                            <Text style={styles.labelText}>Enter your Password</Text>
+                            <Text style={styles.labelText}>Mật Khẩu</Text>
                         </View>
                         <Icon name="lock" size={20} color="#8E8E93" style={styles.icon} />
                         <TextInput
                             style={styles.input}
-                            placeholder="Enter your Password"
+                            placeholder="Nhập vào mật khẩu"
                             secureTextEntry={secureTextEntry}
                             value={password}
                             onChangeText={setPassword}
@@ -122,12 +122,12 @@ const SignUp = ({ navigation }) => {
 
                     <View style={styles.inputContainer}>
                         <View style={styles.labelContainer}>
-                            <Text style={styles.labelText}>Re-type your Password</Text>
+                            <Text style={styles.labelText}>Nhập lại mật khẩu</Text>
                         </View>
                         <Icon name="lock" size={20} color="#8E8E93" style={styles.icon} />
                         <TextInput
                             style={styles.input}
-                            placeholder="Re-type your Password"
+                            placeholder="Nhập Lại Mật Khẩu"
                             secureTextEntry={reTypeSecureTextEntry}
                             value={reTypePassword}
                             onChangeText={setReTypePassword}
@@ -145,12 +145,12 @@ const SignUp = ({ navigation }) => {
                         style={[styles.signInButton, { backgroundColor: '#AFC18E' }]}
                         onPress={handleSignUp}
                     >
-                        <Text style={styles.signInButtonText}>Create Account</Text>
+                        <Text style={styles.signInButtonText}>Đăng Ký</Text>
                     </TouchableOpacity>
 
                     <Text style={styles.signUpText}>
-                        Already have an account?
-                        <Text style={styles.signUpLink} onPress={() => navigation.navigate('LoginAccount')}> Sign In</Text>
+                        Bạn Đã Có Tài Khoản?
+                        <Text style={styles.signUpLink} onPress={() => navigation.navigate('LoginAccount')}> Đăng Nhập</Text>
                     </Text>
                 </Animated.View>
             </ScrollView>

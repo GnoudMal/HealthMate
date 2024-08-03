@@ -69,7 +69,7 @@ const QuestionDetail = ({ route, navigation }) => {
                     messages: firestore.FieldValue.arrayUnion({
                         userId: currentUser.uid,
                         content: followUpQuestion,
-                        createdAt: new Date(),
+                        createdAt: firestore.FieldValue.serverTimestamp(),
                         type: 'followUp'
                     }),
                     updatedAt: firestore.FieldValue.serverTimestamp()
@@ -94,14 +94,31 @@ const QuestionDetail = ({ route, navigation }) => {
             const currentUser = auth().currentUser;
 
             if (currentUser) {
-                await firestore().collection('consultations').doc(questionId).update({
+                const questionRef = firestore().collection('consultations').doc(questionId);
+
+                // Tạo timestamp thủ công cho phản hồi
+                const timestamp = new Date();
+
+                await questionRef.update({
                     messages: firestore.FieldValue.arrayUnion({
                         userId: currentUser.uid,
                         content: response,
-                        createdAt: new Date(),
+                        createdAt: timestamp, // Timestamp cho phản hồi
                         type: 'response'
                     }),
-                    updatedAt: firestore.FieldValue.serverTimestamp()
+                    updatedAt: timestamp // Timestamp cho cập nhật
+                });
+
+                // Tạo một đối tượng thông báo với timestamp thủ công
+                const notification = {
+                    content: 'Bạn có một phản hồi mới từ chuyên gia: ' + response,
+                    createdAt: timestamp.toISOString(), // Timestamp cho thông báo
+                    questionId: questionId,
+                };
+
+                // Cập nhật thông báo cho người dùng
+                await firestore().collection('Users').doc(question.userId).update({
+                    notifications: firestore.FieldValue.arrayUnion(notification)
                 });
 
                 setResponse('');
@@ -109,9 +126,11 @@ const QuestionDetail = ({ route, navigation }) => {
             }
         } catch (error) {
             console.log(error);
-            setMessage('Có lỗi xảy ra. Vui lòng thử lại.');
+            setMessage('Có lỗi xảy ra. Vui lòng thử lại sau.');
         }
     };
+
+
 
 
     const renderMessageItem = ({ item }) => {
@@ -145,7 +164,11 @@ const QuestionDetail = ({ route, navigation }) => {
     return (
         <BackgroundImage style={{ flex: 1 }} source={{ uri: 'https://i.pinimg.com/564x/1f/21/da/1f21dac04b79e33d177b824aa7dc88f5.jpg' }}>
             <SafeAreaView style={styles.container}>
-
+                <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', justifyContent: 'flex-start' }}>
+                    <TouchableOpacity style={styles.btnBack} onPress={() => navigation.goBack()}>
+                        <Icon name="arrow-back" size={28} color="black" />
+                    </TouchableOpacity>
+                </View>
                 {message ? <Text>{message}</Text> : null}
                 {question && (
                     <FlatList
@@ -153,10 +176,10 @@ const QuestionDetail = ({ route, navigation }) => {
                         renderItem={renderMessageItem}
                         keyExtractor={(item, index) => index.toString()}
                         ListHeaderComponent={() => (
-                            <>
+                            <View style={{ backgroundColor: 'white', padding: 10, borderRadius: 20, width: '60%' }}>
                                 <Text style={styles.questionField}>Lĩnh Vực: {question.field}</Text>
                                 <Text style={styles.questionText}>Nội Dung: {question.question}</Text>
-                            </>
+                            </View>
                         )}
                     />
                 )}
@@ -198,16 +221,26 @@ const QuestionDetail = ({ route, navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20,
+        paddingHorizontal: 20,
+        paddingBottom: 20,
     },
     questionField: {
+        color: 'black',
+        fontSize: 20,
         fontWeight: 'bold',
-        marginBottom: 10,
+
+    },
+    btnBack: {
+        // backgroundColor: '#F7F8F8',
+        padding: 7,
+        borderRadius: 8,
+        // marginBottom: 16,
+        marginRight: 10
     },
     questionText: {
-        marginVertical: 10,
         fontSize: 16,
-        fontWeight: 'bold'
+        fontWeight: 'bold',
+        color: 'black'
     },
     messageContainer: {
         flexDirection: 'row',
@@ -254,6 +287,7 @@ const styles = StyleSheet.create({
     },
     btnSend: {
         padding: 12,
+        borderRadius: 50,
         backgroundColor: 'white',
     },
     otherUserTime: {
@@ -269,7 +303,7 @@ const styles = StyleSheet.create({
     },
     inputContainer: {
         backgroundColor: 'white',
-        borderRadius: 5,
+        borderRadius: 15,
         borderColor: 'gray',
         borderWidth: 1,
         flexDirection: 'row',

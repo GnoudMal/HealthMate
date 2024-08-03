@@ -44,9 +44,9 @@ const WaterIntakeComponent = () => {
                         <LinearGradient colors={isDarkMode ? ['#555', '#777'] : ['#C58BF2', '#B4C0FE']} style={[styles.progressBarFill, { height: `${progressPercentage}%` }]} />
                     </View>
                     <View style={styles.timeUpdates}>
-                        <Text style={[styles.cardTitle, { color: isDarkMode ? '#FFF' : '#1D242A' }]}>Water Intake</Text>
+                        <Text style={[styles.cardTitle, { color: isDarkMode ? '#FFF' : '#1D242A' }]}>Lượng nước uống</Text>
                         <Text style={[styles.totalLiters, { color: isDarkMode ? '#9DCEFF' : '#9DCEFF' }]}>4 Liters</Text>
-                        <Text style={[styles.realTimeUpdates, { color: isDarkMode ? '#CCC' : '#7B6F72' }]}>Real time updates</Text>
+                        <Text style={[styles.realTimeUpdates, { color: isDarkMode ? '#CCC' : '#7B6F72' }]}>Cập nhật theo thời gian thực</Text>
                         <View style={styles.timeUpdate}>
                             <View style={[styles.dot, { backgroundColor: isDarkMode ? '#FFF' : '#5e17eb' }]} />
                             <View>

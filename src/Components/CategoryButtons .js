@@ -21,7 +21,7 @@ const CategoryButtons = ({ navigation }) => {
         if (label === 'Tinh Thần') {
             navigation.navigate('MindScreen');
         } else if (label === 'Giấc Ngủ') {
-            navigation.navigate('SleepTracking')
+            navigation.navigate('SleepScreen')
         } else if (label === 'Ăn Uống') {
             navigation.navigate('HealthScreen')
         } else if (label === 'Thể Chất') {

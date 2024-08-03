@@ -22,12 +22,12 @@ const CircularProgress = ({ size, strokeWidth, percentage, innerText }) => {
             <Svg height={size} width={size} viewBox={`0 0 ${size} ${size}`}>
                 <Defs>
                     <LinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <Stop offset="0%" stopColor="#C58BF2" />
-                        <Stop offset="100%" stopColor="#B4C0FE" />
+                        <Stop offset="0%" stopColor="#FF6D7F" />
+                        <Stop offset="100%" stopColor="#FF6D7F" />
                     </LinearGradient>
                 </Defs>
                 <Circle
-                    stroke="#e6e6e6"
+                    stroke="#FCBCC1"
                     fill="transparent"
                     cx={size / 2}
                     cy={size / 2}
@@ -45,12 +45,7 @@ const CircularProgress = ({ size, strokeWidth, percentage, innerText }) => {
                     strokeDashoffset={strokeDashoffset}
                     strokeLinecap="round"
                 />
-                <Circle
-                    fill="#92A3FD"
-                    cx={size / 2}
-                    cy={size / 2}
-                    r={radius - strokeWidth / 1.2}
-                />
+
             </Svg>
             <View style={styles.innerTextContainer}>
                 <Text style={styles.innerText}>{innerText}</Text>
@@ -98,7 +93,7 @@ const CaloriesComponent = () => {
 
     return (
         <View style={styles.container}>
-            <View style={[styles.card, { backgroundColor: isDarkMode ? '#ccc' : '#FFEB99' }]}>
+            <View style={[styles.card, { backgroundColor: isDarkMode ? '#ccc' : '#FBE0E0' }]}>
                 <View style={{ alignItems: 'flex-start', alignSelf: 'flex-start', flexDirection: 'row' }}>
                     <Icon name={'fire'} size={24} color="black" />
                     <View >
@@ -107,8 +102,8 @@ const CaloriesComponent = () => {
                     </View>
                 </View>
                 <CircularProgress
-                    size={80}
-                    strokeWidth={10}
+                    size={85}
+                    strokeWidth={8}
                     percentage={(goalCalories > 0 ? (consumedCalories / goalCalories) * 100 : 0)}
                     innerText={`${remainingCalories.toFixed(2)} kCal left`}
                 />
@@ -126,7 +121,7 @@ const styles = StyleSheet.create({
     card: {
         width: 150,
         height: 150,
-        backgroundColor: '#FFEB99',
+        backgroundColor: '#FBE0E0',
         borderRadius: 20,
         justifyContent: 'center',
         alignItems: 'center',
@@ -152,7 +147,7 @@ const styles = StyleSheet.create({
         height: '100%',
     },
     innerText: {
-        fontSize: 9,
+        fontSize: 12,
         color: 'black',
         fontWeight: 'bold',
         textAlign: 'center',
