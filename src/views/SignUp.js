@@ -62,7 +62,7 @@ const SignUp = ({ navigation }) => {
             navigation.navigate('LoginAccount', { email: email, password: password }); // Pass the email and password
         } catch (error) {
             Alert.alert('Sign Up Failed', error.message);
-            console.error(error);
+            // console.error(error);
         }
     };
 

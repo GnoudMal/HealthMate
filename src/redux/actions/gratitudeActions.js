@@ -9,6 +9,8 @@ export const fetchEntries = createAsyncThunk('gratitude/fetchEntries', async (id
 });
 
 export const addEntryToFirestore = createAsyncThunk('gratitude/addEntryToFirestore', async ({ entry, id_user }) => {
+    console.log('check press', entry);
+
     const newEntry = await firestore().collection('gratitudeEntries').add({ ...entry, id_user });
     return { id: newEntry.id, ...entry, id_user };
 });
@@ -71,3 +73,39 @@ export const deleteSharedEntryFromFirestore = createAsyncThunk(
         }
     }
 );
+
+export const toggleLikeEntry = createAsyncThunk(
+    'gratitude/toggleLikeEntry',
+    async ({ docId, userId }, { rejectWithValue }) => {
+        try {
+            console.log('check bai', docId + " " + userId);
+
+            const entryRef = firestore().collection('sharedEntries').doc(docId);
+            const doc = await entryRef.get();
+            if (!doc.exists) throw new Error('Document not found');
+
+            const data = doc.data();
+            const likes = data.likes || [];
+            const userAlreadyLiked = likes.includes(userId);
+
+
+
+
+            if (userAlreadyLiked) {
+                await entryRef.update({
+                    likes: firestore.FieldValue.arrayRemove(userId)
+                });
+            } else {
+                await entryRef.update({
+                    likes: firestore.FieldValue.arrayUnion(userId)
+                });
+            }
+            console.log();
+
+            return { docId, userId };
+        } catch (error) {
+            return rejectWithValue(error.message);
+        }
+    }
+);
+

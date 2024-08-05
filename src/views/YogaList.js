@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, FlatList, Dimensions, TouchableOpacity, Modal, TextInput, Button } from 'react-native';
+import { StyleSheet, Text, View, FlatList, Dimensions, TouchableOpacity, Modal, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import YouTubeIframe from 'react-native-youtube-iframe';
 import { fetchVideos, addVideo, fetchVideosByType } from '../service/firebaseService';
@@ -8,6 +8,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchVideoTitle } from '../apiService/getApi';
 
 const { width } = Dimensions.get('window');
+
+// Mảng video mặc định
+const defaultVideos = [
+    { title: 'Yoga for Beginners', videoId: 'nQwKKCqkJxg', type: 'yoga', id: '1' },
+    { title: 'Advanced Yoga Poses', videoId: '149Iac5fmoE', type: 'yoga', id: '2' },
+    { title: 'Morning Yoga Routine', videoId: 'UxU8OCsNbYY', type: 'yoga', id: '3' },
+];
+
+
 
 const YogaList = ({ navigation }) => {
     const [videos, setVideos] = useState([]);
@@ -34,16 +43,22 @@ const YogaList = ({ navigation }) => {
         getUserId();
     }, []);
 
+    console.log(videos);
+
+
     useEffect(() => {
         const loadVideos = async () => {
             if (!userId) return;
             setLoading(true);
             try {
-                const fetchedVideos = await fetchVideosByType(userId, 'yoga');
-                console.log('ú alo', userId);
+                let fetchedVideos = await fetchVideosByType(userId, 'yoga');
+                if (fetchedVideos.length === 0) {
+                    // Nếu không có video từ Firebase, sử dụng video mặc định
+                    fetchedVideos = defaultVideos;
+                }
                 setVideos(fetchedVideos);
             } catch (error) {
-                // console.log('Error fetching videos:', error);
+                console.error('Error fetching videos:', error);
             } finally {
                 setLoading(false);
             }
@@ -65,8 +80,9 @@ const YogaList = ({ navigation }) => {
         setNewVideoTitle('');
         setNewVideoId('');
         setModalVisible(false);
-        // const fetchedVideos = await fetchVideos(userId);
-        setVideos(fetchedVideos);
+        // Cập nhật danh sách video sau khi thêm video mới
+        const updatedVideos = [...videos, newVideo];
+        setVideos(updatedVideos);
     };
 
     const handleVideoIdBlur = async () => {
@@ -74,19 +90,22 @@ const YogaList = ({ navigation }) => {
         setNewVideoTitle(videoTitle);
     };
 
-    const renderItem = ({ item }) => (
-        <View style={styles.videoContainer}>
-            <Text style={styles.title}>{item.title}</Text>
-            <View style={styles.youtubeContainer}>
-                <YouTubeIframe
-                    videoId={item.videoId}
-                    height={width * 0.53}
-                    play={false}
-                    onChangeState={(state) => console.log(state)}
-                />
+    const renderItem = ({ item }) => {
+        console.log('Video ID:', item.videoId); // Đặt ở đây để kiểm tra ID video
+        return (
+            <View style={styles.videoContainer}>
+                <Text style={styles.title}>{item.title}</Text>
+                <View style={styles.youtubeContainer}>
+                    <YouTubeIframe
+                        videoId={item.videoId}
+                        height={width * 0.53}
+                        play={false}
+                        onChangeState={(state) => console.log('Video state:', state)}
+                    />
+                </View>
             </View>
-        </View>
-    );
+        );
+    };
 
     if (loading) {
         return (
@@ -164,7 +183,6 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     youtubeContainer: {
-
         borderColor: 'black',
         borderRadius: 20,
         overflow: 'hidden',

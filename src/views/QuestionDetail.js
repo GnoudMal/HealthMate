@@ -64,15 +64,17 @@ const QuestionDetail = ({ route, navigation }) => {
         try {
             const currentUser = auth().currentUser;
 
+            const timestamp = new Date();
+
             if (currentUser) {
                 await firestore().collection('consultations').doc(questionId).update({
                     messages: firestore.FieldValue.arrayUnion({
                         userId: currentUser.uid,
                         content: followUpQuestion,
-                        createdAt: firestore.FieldValue.serverTimestamp(),
+                        createdAt: timestamp,
                         type: 'followUp'
                     }),
-                    updatedAt: firestore.FieldValue.serverTimestamp()
+                    updatedAt: timestamp
                 });
 
                 setFollowUpQuestion('');

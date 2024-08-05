@@ -54,7 +54,7 @@ const SleepComponent = () => {
         const startDate = new Date(now.setHours(0, 0, 0, 0));
         startDate.setDate(startDate.getDate() - 2); // 2 ngày trước
 
-        const dailyData = [6, 0, 0];
+        const dailyData = [0, 0, 0];
         let totalSleepToday = 0;
 
         snapshot.docs.forEach(doc => {

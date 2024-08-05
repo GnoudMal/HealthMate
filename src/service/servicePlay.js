@@ -49,14 +49,14 @@ export async function addTracks() {
         const preloadedTracks = [
             {
                 id: 'ex1',
-                url: 'https://a128-z3.zmdcdn.me/f7e0fbbd9c317640bbffde7bf93e6d56?authen=exp=1722350117~acl=/f7e0fbbd9c317640bbffde7bf93e6d56/*~hmac=8fc63a1805484671c8374c4ff404553d',
+                url: 'https://a128-z3.zmdcdn.me/4f46a45d6e063e225ca84e1e0b7a1a61?authen=exp=1722921642~acl=/4f46a45d6e063e225ca84e1e0b7a1a61/*~hmac=4ffdc037d9b60656ba8e680c5818e08d',
                 title: 'Track 1',
                 artist: 'Artist 1',
                 imageUri: 'https://tranhgotreotuong.com/wp-content/uploads/2019/08/Ch%E1%BB%AF-T%C3%A2m-trong-th%C6%B0-ph%C3%A1p-th%E1%BB%83-hi%E1%BB%87n-%E1%BB%9F-gi%C3%A1-tr%E1%BB%8B-ngh%E1%BB%87-thu%E1%BA%ADt.jpg'
             },
             {
                 id: 'ex2',
-                url: 'https://a128-z3.zmdcdn.me/9dc296f484896ea8c460f1f82100c933?authen=exp=1722350982~acl=/9dc296f484896ea8c460f1f82100c933/*~hmac=00215465349012b493de90c066d97c88',
+                url: 'https://vnno-zn-5-tf-a128-z3.zmdcdn.me/c8b15f0ca52fe057e3149afd7f28aecd?authen=exp=1722921683~acl=/c8b15f0ca52fe057e3149afd7f28aecd/*~hmac=8a182f87545c31773186fe54c1bf0c8e',
                 title: 'Track 2',
                 artist: 'Artist 2',
                 imageUri: 'https://tranhgotreotuong.com/wp-content/uploads/2019/08/Ch%E1%BB%AF-T%C3%A2m-trong-th%C6%B0-ph%C3%A1p-th%E1%BB%83-hi%E1%BB%87n-%E1%BB%9F-gi%C3%A1-tr%E1%BB%8B-ngh%E1%BB%87-thu%E1%BA%ADt.jpg'

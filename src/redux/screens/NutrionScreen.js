@@ -282,7 +282,7 @@ const NutrionScreen = () => {
                         />
                         <Picker
                             selectedValue={editGender}
-                            onValueChange={(itemValue) => setGender(itemValue)}
+                            onValueChange={(itemValue) => setEditGender(itemValue)}
                             style={styles.picker}
                         >
                             <Picker.Item label="Chọn giới tính" value="" />

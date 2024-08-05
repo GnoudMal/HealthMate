@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, Modal, TextInput, Pressable, Alert, Button } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, Modal, TextInput, Pressable, Alert, Button, ActivityIndicator } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import Icon2 from 'react-native-vector-icons/Ionicons';
@@ -20,6 +20,12 @@ import PushNotification from 'react-native-push-notification';
 const GratitudeScreen = () => {
     const navigation = useNavigation();
     const goals = useSelector((state) => state.goal.goals);
+    const [isDropdownVisible, setDropdownVisible] = useState(false);
+    const [selectedDropdownId, setSelectedDropdownId] = useState(null);
+
+    const toggleDropdown = (id) => {
+        setSelectedDropdownId((prevId) => (prevId === id ? null : id));
+    };
 
     const [userId, setUserId] = useState(null);
     const dispatch = useDispatch();
@@ -33,6 +39,7 @@ const GratitudeScreen = () => {
     const [editTitle, setEditTitle] = useState('');
     const [editContent, setEditContent] = useState('');
     const [goalModalVisible, setGoalModalVisible] = useState(false);
+    const [editImage, setEditImage] = useState('');
     const [selectedGoal, setSelectedGoal] = useState(null);
     const [isTimePickerVisible, setTimePickerVisible] = useState(false);
     const [reminderTime, setReminderTime] = useState(null);
@@ -44,6 +51,13 @@ const GratitudeScreen = () => {
     const { userInfo } = useSelector((state) => state.user);
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [showTimePicker, setShowTimePicker] = useState(false);
+    const [imageLoading, setImageLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
+
+
+    const handleImageLoad = () => {
+        setImageLoading(false);
+    };
 
     console.log('check goal', goals);
 
@@ -146,6 +160,7 @@ const GratitudeScreen = () => {
             status: statusText,
             sharedAt: new Date().toISOString(),
             shareBy: userId,
+            likes: [],
 
         };
 
@@ -194,20 +209,30 @@ const GratitudeScreen = () => {
     }, [dispatch, userId]);
 
     const handleAddEntry = async () => {
-
         if (!userId) {
             alert('User ID is not available');
             return;
         }
 
+        if (!newTitle.trim() || !newContent.trim()) {
+            alert('Title and content are required');
+            return;
+        }
+
         console.log('User ID:', userId);
+
+        const defaultImageUrl = 'https://i.pinimg.com/564x/62/ab/e8/62abe8ce7869a3405170f74371393a44.jpg';
 
         const newEntry = {
             title: newTitle,
             content: newContent,
             date: new Date().toISOString(),
-            image: imageUrl
+            image: defaultImageUrl // Khởi tạo với giá trị mặc định từ imageUrl
         };
+
+        console.log('check add', newEntry);
+
+
         if (hinhAnh) {
             try {
                 const url = await uploadImage(hinhAnh);
@@ -222,13 +247,19 @@ const GratitudeScreen = () => {
         }
 
         dispatch(addEntryToFirestore({ entry: newEntry, id_user: userId }))
-            .then(() => console.log('Entry added successfully'),
-                setNewTitle(''),
-                setNewContent(''),
-                setAddModalVisible(false),
-            )
-            .catch(error => console.error('Error adding entry:', error));
+            .then(() => {
+                console.log('Entry added successfully');
+                setNewTitle('');
+                setNewContent('');
+                setHinhAnh(null);
+                setAddModalVisible(false);
+            })
+            .catch(error => {
+                console.error('Error adding entry:', error);
+                alert('Failed to add entry.');
+            });
     };
+
 
     const chonAnh = useCallback(() => {
         let options = {
@@ -241,6 +272,8 @@ const GratitudeScreen = () => {
             } else if (response.error) {
                 console.log('ImagePicker Error: ', response.error);
             } else {
+                console.log('Selected image URI:', response.assets[0].uri);
+                setEditImage(response.assets[0].uri);
                 setHinhAnh(response);
             }
         });
@@ -252,11 +285,14 @@ const GratitudeScreen = () => {
         const uploadUri = Platform.OS === 'ios' ? uri.replace('file://', '') : uri;
         console.log(uploadUri);
         try {
+            setIsLoading(true);
             await storage().ref(filename).putFile(uploadUri);
             const url = await storage().ref(filename).getDownloadURL();
+            setIsLoading(false);
             setImageUrl(url);
             return url;
         } catch (e) {
+            setIsLoading(false);
             console.log('eror ne');
             console.error(e);
             return null;
@@ -265,11 +301,13 @@ const GratitudeScreen = () => {
 
     const saveImageUrlToFirestore = async (url) => {
         try {
+            setIsLoading(true);
             await firestore().collection('gratitudeEntries').doc(userId).update({
                 avatarUrl: url,
             });
             alert('Image uploaded successfully!');
         } catch (e) {
+            setIsLoading(false);
             console.error(e);
             alert('Failed to save image URL to Firestore.');
         }
@@ -312,31 +350,41 @@ const GratitudeScreen = () => {
         setEditEntryId(entry.id);
         setEditTitle(entry.title);
         setEditContent(entry.content);
+        setEditImage(entry.image || ''); // Đảm bảo editImage không phải là null
         setEditModalVisible(true);
     };
 
     const handleUpdateEntry = () => {
         if (!userId || !editEntryId) {
-            alert('User ID or Entry ID is not available');
+            alert('User ID hoặc Entry ID không có sẵn');
             return;
         }
 
+        setIsLoading(true);
         const updatedEntry = {
             title: editTitle,
             content: editContent,
-            date: new Date().toISOString()
+            date: new Date().toISOString(),
+            image: editImage
         };
 
         dispatch(updateEntryInFirestore({ id: editEntryId, updatedEntry }))
             .then(() => {
-                console.log('Entry updated successfully');
+                console.log('Cập nhật mục thành công');
                 setEditTitle('');
                 setEditContent('');
                 setEditEntryId(null);
                 setEditModalVisible(false);
+
+                setIsLoading(false);
+                dispatch(fetchEntries(userId)); // Giả sử bạn có một action fetchEntries
             })
-            .catch(error => console.error('Error updating entry:', error));
+            .catch(error => {
+                setIsLoading(false);
+                console.error('Lỗi cập nhật mục:', error);
+            });
     };
+
 
     const renderEditModal = () => (
         <Modal
@@ -366,6 +414,15 @@ const GratitudeScreen = () => {
                         onChangeText={setEditContent}
                     />
 
+                    <TouchableOpacity style={styles.imageButton} onPress={chonAnh}>
+                        <Text style={styles.imageButtonText}>Chọn Ảnh</Text>
+                    </TouchableOpacity>
+                    {editImage ? (
+                        <Image source={{ uri: editImage }} style={styles.avatar} />
+                    ) : (
+                        <Text>No Image Selected</Text>
+                    )}
+
                     <View style={{ flexDirection: 'row' }}>
                         <TouchableOpacity onPress={handleUpdateEntry} style={styles.btnTask}>
                             <Text style={styles.btnText}>Cập Nhật</Text>
@@ -378,6 +435,22 @@ const GratitudeScreen = () => {
             </View>
         </Modal>
     );
+
+    const LoadingIndicator = () => (
+        <Modal
+            transparent={true}
+            animationType={'none'}
+            visible={isLoading}
+            onRequestClose={() => { }}
+        >
+            <View style={styles.modalBackground}>
+                <View style={styles.activityIndicatorWrapper}>
+                    <ActivityIndicator animating={isLoading} />
+                </View>
+            </View>
+        </Modal>
+    );
+
 
     const handleSelectGoal = (goal) => {
         setSelectedGoal(goal);
@@ -477,7 +550,13 @@ const GratitudeScreen = () => {
 
     const renderItem = ({ item }) => (
         <Pressable style={styles.card} onPress={() => openEditModal(item)} key={item.id}>
-            <Image source={{ uri: item.image }} style={styles.imgCard} />
+            <Image
+                source={item.image ? { uri: item.image } : require('../../images/Thien.png')}
+                style={styles.imgCard}
+                onLoad={handleImageLoad}
+                onLoadEnd={() => setImageLoading(false)}
+            />
+            {imageLoading && <ActivityIndicator size="small" color="#0000ff" />}
             <View style={styles.cardContentContainer}>
                 <View style={styles.textContainer}>
                     <Text style={styles.cardTitle}>{item.title}</Text>
@@ -487,17 +566,29 @@ const GratitudeScreen = () => {
                 <View style={styles.buttonContainerEntry}>
                     <TouchableOpacity
                         style={styles.shareButton}
-                        onPress={() => handleSharePress(item)}
+                        onPress={() => toggleDropdown(item.id)}
                     >
-                        <Icon3 name="sharealt" size={24} color="#fff" />
+                        <Icon name='ellipsis-v' size={20} color='#fff' />
                     </TouchableOpacity>
-                    {/* Uncomment this if you want to add a delete button
-                <TouchableOpacity
-                    style={styles.deleteButton}
-                    onPress={() => handleDeleteEntry(item.id)}
-                >
-                    <Icon name="trash" size={28} color="#fff" />
-                </TouchableOpacity> */}
+                    {/* <Icon3 name="sharealt" size={24} color="#fff" /> */}
+                    {selectedDropdownId === item.id && (
+                        <View style={styles.dropdown}>
+                            <TouchableOpacity
+                                style={styles.dropdownItem}
+                                onPress={() => handleSharePress(item)}
+                            >
+                                <Icon3 name="sharealt" size={24} color="black" />
+                                <Text style={styles.dropdownText}>Share</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.dropdownItem}
+                                onPress={() => handleDeleteEntry(item.id)}
+                            >
+                                <Icon name="trash" size={24} color="black" />
+                                <Text style={styles.dropdownText}>Delete</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
                 </View>
             </View>
         </Pressable>
@@ -505,13 +596,15 @@ const GratitudeScreen = () => {
 
     return (
         <View style={styles.container}>
+            {isLoading && <LoadingIndicator />}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
                     <Icon2 name="arrow-back" size={24} color="#08192C" />
                 </TouchableOpacity>
 
                 <View style={styles.headerIcons}>
-                    <Icon3 name="pushpin" size={24} onPress={() => setGoalModalVisible(true)} color="#000" style={styles.icon} />
+
+                    <Icon2 name="settings" size={24} onPress={() => setGoalModalVisible(true)} color="#000" style={styles.icon} />
                     <Icon2 onPress={() => setShowTimePicker(true)} name="time" size={24} color="#000" style={styles.icon} />
 
                     <Image
@@ -522,13 +615,13 @@ const GratitudeScreen = () => {
             </View>
 
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <TouchableOpacity >
+                {/* <TouchableOpacity >
                     <Icon name="list" size={24} color="#000" style={styles.icon} />
-                </TouchableOpacity>
+                </TouchableOpacity> */}
                 <Text style={styles.title}>BIẾT ƠN</Text>
             </View>
             {status === 'loading' && <Text>Đang tải...</Text>}
-            {error && <Text style={styles.error}>{error}</Text>}
+            {/* {error && <Text style={styles.error}>{error}</Text>} */}
             <View style={styles.goalSection}>
                 <Text style={styles.goalTitle}>Mục tiêu hiện tại: {currentGoal.target}</Text>
 
@@ -753,6 +846,21 @@ const styles = StyleSheet.create({
         borderRadius: 30,
         elevation: 8,
     },
+    modalBackground: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)'
+    },
+    activityIndicatorWrapper: {
+        backgroundColor: '#FFFFFF',
+        height: 100,
+        width: 100,
+        borderRadius: 10,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
     error: {
         color: 'red',
         marginBottom: 16,
@@ -880,7 +988,7 @@ const styles = StyleSheet.create({
     },
     buttonContainerEntry: {
         position: 'absolute',
-        top: 0,
+        top: -10,
         right: 0,
         zIndex: 1000,
         flexDirection: 'row',
@@ -905,6 +1013,27 @@ const styles = StyleSheet.create({
     buttonText: {
         color: 'white',
         fontWeight: 'bold',
+    },
+    dropdown: {
+        position: 'absolute',
+        top: '100%',
+        right: 0,
+        backgroundColor: 'white',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: 'gray',
+        width: 120,
+        zIndex: 1000, // Ensure dropdown is above other components
+    },
+    dropdownItem: {
+        flexDirection: 'row',
+        padding: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: 'gray',
+    },
+    dropdownText: {
+        marginLeft: 10,
+        color: 'black',
     },
 });
 

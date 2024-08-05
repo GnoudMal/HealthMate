@@ -149,22 +149,22 @@ const ProfileScreen = ({ navigation }) => {
                         <Text style={styles.profileProgram}>Lose a Fat Program</Text>
                     </View>
                     <TouchableOpacity style={styles.editButton}>
-                        <Text style={styles.editButtonText}>Edit</Text>
+                        <Text style={styles.editButtonText}>Chỉnh sửa</Text>
                     </TouchableOpacity>
                 </View>
 
                 <View style={styles.statsSection}>
                     <View style={styles.statBox}>
                         <Text style={styles.statValue}>{userInfo.height}cm</Text>
-                        <Text style={styles.statLabel}>Height</Text>
+                        <Text style={styles.statLabel}>Chiều cao</Text>
                     </View>
                     <View style={styles.statBox}>
                         <Text style={styles.statValue}>{userInfo.weight}kg</Text>
-                        <Text style={styles.statLabel}>Weight</Text>
+                        <Text style={styles.statLabel}>Cân Nặng</Text>
                     </View>
                     <View style={styles.statBox}>
                         <Text style={styles.statValue}>22yo</Text>
-                        <Text style={styles.statLabel}>Age</Text>
+                        <Text style={styles.statLabel}>Tuổi</Text>
                     </View>
                 </View>
 
@@ -172,27 +172,27 @@ const ProfileScreen = ({ navigation }) => {
                     <Text style={styles.sectionTitle}>Account</Text>
                     <TouchableOpacity onPress={() => navigation.navigate('PersonalDetail')} style={styles.sectionItem}>
                         <Icon name="person-outline" size={24} />
-                        <Text style={styles.sectionItemText}>Personal Data</Text>
+                        <Text style={styles.sectionItemText}>Thông tin cá nhân</Text>
                         <Icon name="chevron-forward-outline" size={24} />
                     </TouchableOpacity>
                     <View style={styles.sectionItem}>
                         <Icon name="trophy-outline" size={24} />
-                        <Text style={styles.sectionItemText}>Achievement</Text>
+                        <Text style={styles.sectionItemText}>Thành Lưu</Text>
                         <Icon name="chevron-forward-outline" size={24} />
                     </View>
                     <TouchableOpacity onPress={() => navigation.navigate('FriendsListScreen')} style={styles.sectionItem}>
                         <Icon2 name="account-multiple" size={24} />
-                        <Text style={styles.sectionItemText}>Friend</Text>
+                        <Text style={styles.sectionItemText}>Bạn Bè</Text>
                         <Icon name="chevron-forward-outline" size={24} />
                     </TouchableOpacity>
                     <View style={styles.sectionItem}>
                         <Icon name="time-outline" size={24} />
-                        <Text style={styles.sectionItemText}>Activity History</Text>
+                        <Text style={styles.sectionItemText}>Lịch Sử Hoạt động</Text>
                         <Icon name="chevron-forward-outline" size={24} />
                     </View>
                     <View style={styles.sectionItem}>
                         <Icon name="barbell-outline" size={24} />
-                        <Text style={styles.sectionItemText}>Workout Progress</Text>
+                        <Text style={styles.sectionItemText}>Tiến trình thể dục</Text>
                         <Icon name="chevron-forward-outline" size={24} />
                     </View>
                 </View>
@@ -202,14 +202,14 @@ const ProfileScreen = ({ navigation }) => {
                         <Text style={styles.sectionTitle}>Admin Actions</Text>
                         <TouchableOpacity style={styles.sectionItem} onPress={() => navigation.navigate('ConsultantsManagement')}>
                             <Icon name="business-outline" size={24} />
-                            <Text style={styles.sectionItemText}>Manage Consultants</Text>
+                            <Text style={styles.sectionItemText}>Quản Lý Tư Vấn Viên</Text>
                         </TouchableOpacity>
                     </View>
                 )}
 
                 {isExpert && (
                     <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Consultation Fields</Text>
+                        <Text style={styles.sectionTitle}>Lĩnh Vức Tư Vấn</Text>
                         {['Ăn Uống', 'Tâm Lý', 'Sức Khỏe', 'Tinh Thần', 'Tập Luyện Thể Thao'].map(field => (
                             <View key={field} style={styles.sectionItem}>
                                 <CheckBox
@@ -220,7 +220,7 @@ const ProfileScreen = ({ navigation }) => {
                             </View>
                         ))}
                         <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                            <Text style={styles.saveButtonText}>Save Changes</Text>
+                            <Text style={styles.saveButtonText}>Lưu Thay Đổi</Text>
                         </TouchableOpacity>
                     </View>
                 )}
@@ -240,28 +240,29 @@ const ProfileScreen = ({ navigation }) => {
                 </View>
 
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Other</Text>
+                    <Text style={styles.sectionTitle}>Thêm</Text>
                     <View style={styles.sectionItem}>
                         <Icon name="mail-outline" size={24} />
-                        <Text style={styles.sectionItemText}>Contact Us</Text>
+                        <Text style={styles.sectionItemText}>Liên hệ với chúng tôi</Text>
                         <Icon name="chevron-forward-outline" size={24} />
                     </View>
                     <View style={styles.sectionItem}>
                         <Icon name="lock-closed-outline" size={24} />
-                        <Text style={styles.sectionItemText}>Privacy Policy</Text>
+                        <Text style={styles.sectionItemText}>Chính sách bảo mật</Text>
                         <Icon name="chevron-forward-outline" size={24} />
                     </View>
                     <View style={styles.sectionItem}>
                         <Icon name="settings-outline" size={24} />
-                        <Text style={styles.sectionItemText}>Settings</Text>
+                        <Text style={styles.sectionItemText}>Cài đặt</Text>
                         <Icon name="chevron-forward-outline" size={24} />
                     </View>
                     <TouchableOpacity onPress={handleLogout} style={styles.sectionItem}>
                         <Icon name="log-out-outline" size={24} />
-                        <Text style={styles.sectionItemText}>Log Out</Text>
+                        <Text style={styles.sectionItemText}>Đăng ký</Text>
                     </TouchableOpacity>
                 </View>
             </ScrollView>
+
         </SafeAreaView>
     );
 };

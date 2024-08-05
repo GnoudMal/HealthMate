@@ -25,6 +25,9 @@ const ExpertConsultations = () => {
             const userRecent = userDocument.data();
             const expertiseFields = userRecent.expertiseFields;
 
+            console.log('check ngnah', expertiseFields);
+
+
             if (currentUser) {
                 const snapshot = await firestore().collection('consultations')
                     .where('expertId', '==', null)
@@ -54,6 +57,8 @@ const ExpertConsultations = () => {
             }
         } catch (error) {
             setMessage('Có lỗi xảy ra khi tải yêu cầu.');
+            console.log(error);
+
         }
     };
 
@@ -157,11 +162,11 @@ const ExpertConsultations = () => {
                             <Text style={styles.buttonText}><Icon name="check" size={16} color="#fff" /> Hoàn thành</Text>
                         </TouchableOpacity>
                     )}
-                    {isCompleted && (
+                    {/* {isCompleted && (
                         <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.deleteButton}>
                             <Text style={styles.buttonText}><Icon name="trash" size={16} color="#fff" /> Xóa</Text>
                         </TouchableOpacity>
-                    )}
+                    )} */}
 
                 </View>
 
@@ -190,7 +195,7 @@ const ExpertConsultations = () => {
     return (
         <ImageBackground style={{ flex: 1 }} source={{ uri: 'https://i.pinimg.com/564x/d9/78/3d/d9783d4bafd8d5fd0cf4ef814f4f87e0.jpg' }}>
             <SafeAreaView style={styles.container}>
-                {message ? <Text>{message}</Text> : null}
+                {/* {message ? <Text>{message}</Text> : null} */}
                 <Text style={{ fontSize: 30, textAlign: 'center', marginBottom: 20, fontWeight: 'bold' }}>
                     <Icon name="clipboard" size={30} color="#000" /> Tiếp Nhận Thông Tin
                 </Text>

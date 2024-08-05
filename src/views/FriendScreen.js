@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, FlatList, TouchableOpacity, StyleSheet, Alert, Image } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import debounce from 'lodash.debounce';
 
 const AddFriendScreen = ({ navigation }) => {
     const [username, setUsername] = useState('');
@@ -48,15 +49,20 @@ const AddFriendScreen = ({ navigation }) => {
         getUserId();
     }, []);
 
-    const handleSearch = async () => {
+    const handleSearch = useCallback(debounce(async () => {
+        if (username.trim() === '') {
+            setSearchResults([]);
+            return;
+        }
+
         try {
             const userSnapshot = await firestore()
                 .collection('Users')
-                .where('username', '==', username)
+                .where('username', '>=', username)
+                .where('username', '<=', username + '\uf8ff')
                 .get();
 
             if (userSnapshot.empty) {
-                Alert.alert('Không tìm thấy người dùng', 'Vui lòng kiểm tra lại username');
                 setSearchResults([]);
                 return;
             }
@@ -68,14 +74,19 @@ const AddFriendScreen = ({ navigation }) => {
 
             setSearchResults(results);
         } catch (error) {
-            console.error('Lỗi khi tìm kiếm người dùng:', error);
-            Alert.alert('Lỗi', 'Đã xảy ra lỗi khi tìm kiếm người dùng');
+            console.error('Error searching for users:', error);
+            Alert.alert('Error', 'An error occurred while searching for users');
         }
-    };
+    }, 300), [username]);
+
+    useEffect(() => {
+        handleSearch();
+        return handleSearch.cancel;
+    }, [username, handleSearch]);
 
     const handleAddFriend = async (friendId, name) => {
         if (friendsList.includes(friendId)) {
-            Alert.alert('Thông báo', 'Bạn đã là bạn bè rồi.');
+            Alert.alert('Notification', 'You are already friends.');
             return;
         }
 
@@ -90,10 +101,10 @@ const AddFriendScreen = ({ navigation }) => {
                     createdAt: firestore.FieldValue.serverTimestamp(),
                 });
 
-            Alert.alert('Thành công', 'Yêu cầu kết bạn đã được gửi');
+            Alert.alert('Success', 'Friend request sent');
         } catch (error) {
-            console.error('Lỗi khi gửi yêu cầu kết bạn:', error);
-            Alert.alert('Lỗi', 'Đã xảy ra lỗi khi gửi yêu cầu kết bạn');
+            console.error('Error sending friend request:', error);
+            Alert.alert('Error', 'An error occurred while sending the friend request');
         }
     };
 
@@ -120,10 +131,10 @@ const AddFriendScreen = ({ navigation }) => {
                     friends: firestore.FieldValue.arrayUnion(userId),
                 });
 
-            Alert.alert('Thành công', 'Bạn đã chấp nhận yêu cầu kết bạn');
+            Alert.alert('Success', 'Friend request accepted');
         } catch (error) {
-            console.error('Lỗi khi chấp nhận yêu cầu kết bạn:', error);
-            Alert.alert('Lỗi', 'Đã xảy ra lỗi khi chấp nhận yêu cầu kết bạn');
+            console.error('Error accepting friend request:', error);
+            Alert.alert('Error', 'An error occurred while accepting the friend request');
         }
     };
 
@@ -175,7 +186,7 @@ const AddFriendScreen = ({ navigation }) => {
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
                     <View style={styles.userCard}>
-                        <Text>{item.fromUser}</Text>
+                        <Text>{item.fromUserName}</Text>
                         <TouchableOpacity style={styles.button} onPress={() => handleAcceptFriendRequest(item.id, item.fromUser)}>
                             <Text style={styles.buttonText}>Chấp nhận</Text>
                         </TouchableOpacity>

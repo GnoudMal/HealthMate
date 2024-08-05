@@ -6,7 +6,8 @@ import {
     updateEntryInFirestore,
     addSharedEntryToFirestore,
     fetchSharedEntries,
-    deleteSharedEntryFromFirestore
+    deleteSharedEntryFromFirestore,
+    toggleLikeEntry
 } from '../actions/gratitudeActions';
 
 const gratitudeSlice = createSlice({
@@ -59,8 +60,25 @@ const gratitudeSlice = createSlice({
             })
             .addCase(deleteSharedEntryFromFirestore.fulfilled, (state, action) => {
                 state.sharedEntries = state.sharedEntries.filter(entry => entry.docId !== action.payload);
+            })
+            .addCase(toggleLikeEntry.fulfilled, (state, action) => {
+                const { docId, userId } = action.payload;
+                const entry = state.sharedEntries.find(entry => entry.docId === docId);
+                if (entry) {
+                    const userAlreadyLiked = entry.likes.includes(userId);
+                    if (userAlreadyLiked) {
+                        entry.likes = entry.likes.filter(id => id !== userId);
+                    } else {
+                        entry.likes.push(userId);
+                    }
+                }
+            })
+            .addCase(toggleLikeEntry.rejected, (state, action) => {
+                state.status = 'failed';
+                state.error = action.payload;
             });
     }
 });
+
 
 export default gratitudeSlice.reducer;

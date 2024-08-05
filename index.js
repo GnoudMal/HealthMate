@@ -8,6 +8,7 @@ import { name as appName } from './app.json';
 import PushNotification from "react-native-push-notification";
 import TrackPlayer from 'react-native-track-player';
 import { playbackService } from './src/service/servicePlay';
+import { LogBox } from 'react-native';
 
 PushNotification.configure({
     onRegister: function (token) {
@@ -19,5 +20,7 @@ PushNotification.configure({
 TrackPlayer.registerPlaybackService(() => playbackService);
 
 AppRegistry.registerComponent(appName, () => App);
+
+LogBox.ignoreAllLogs();
 
 

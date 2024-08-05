@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, FlatList, Dimensions, TouchableOpacity, Modal, TextInput, Button } from 'react-native';
+import { StyleSheet, Text, View, FlatList, Dimensions, TouchableOpacity, Modal, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import YouTubeIframe from 'react-native-youtube-iframe';
 import { fetchVideos, addVideo, fetchVideosByType } from '../service/firebaseService';
@@ -8,6 +8,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchVideoTitle } from '../apiService/getApi';
 
 const { width } = Dimensions.get('window');
+
+// Mảng video mặc định cho thiền
+const defaultMeditationVideos = [
+    { title: 'Guided Meditation 1', videoId: 'inpok4MKVLM', type: 'meditation', id: '1' },
+    { title: 'Guided Meditation 2', videoId: 'z0GtmPnqAd8', type: 'meditation', id: '2' },
+    { title: 'Evening Meditation', videoId: 'TPC_36ZHOjo', type: 'meditation', id: '3' },
+];
 
 const MeditationList = ({ navigation }) => {
     const [videos, setVideos] = useState([]);
@@ -34,17 +41,19 @@ const MeditationList = ({ navigation }) => {
         getUserId();
     }, []);
 
-    // console.log(userId);
-
     useEffect(() => {
         const loadVideos = async () => {
             if (!userId) return;
             setLoading(true);
             try {
-                const fetchedVideos = await fetchVideosByType(userId, 'meditation');
-                console.log('ú alo', userId);
+                let fetchedVideos = await fetchVideosByType(userId, 'meditation');
+                if (fetchedVideos.length === 0) {
+                    // Nếu không có video từ Firebase, sử dụng video mặc định
+                    fetchedVideos = defaultMeditationVideos;
+                }
                 setVideos(fetchedVideos);
             } catch (error) {
+                console.error('Error fetching videos:', error);
             } finally {
                 setLoading(false);
             }
@@ -59,15 +68,16 @@ const MeditationList = ({ navigation }) => {
         const newVideo = {
             title: newVideoTitle,
             videoId: newVideoId,
+            type: 'meditation',
             userId,
-            type: 'meditation'
         };
         await addVideo(newVideo);
         setNewVideoTitle('');
         setNewVideoId('');
         setModalVisible(false);
-        const fetchedVideos = await fetchVideosByType(userId, 'meditation');
-        setVideos(fetchedVideos);
+        // Cập nhật danh sách video sau khi thêm video mới
+        const updatedVideos = [...videos, newVideo];
+        setVideos(updatedVideos);
     };
 
     const handleVideoIdBlur = async () => {
@@ -75,17 +85,21 @@ const MeditationList = ({ navigation }) => {
         setNewVideoTitle(videoTitle);
     };
 
-    const renderItem = ({ item }) => (
-        <View style={styles.videoContainer}>
-            <Text style={styles.title}>{item.title}</Text>
-            <YouTubeIframe
-                videoId={item.videoId}
-                height={width * 0.56} // Tính toán chiều cao dựa trên chiều rộng màn hình để có tỷ lệ 16:9
-                play={false}
-                onChangeState={(state) => console.log(state)}
-            />
-        </View>
-    );
+    const renderItem = ({ item }) => {
+        return (
+            <View style={styles.videoContainer}>
+                <Text style={styles.title}>{item.title}</Text>
+                <View style={styles.youtubeContainer}>
+                    <YouTubeIframe
+                        videoId={item.videoId}
+                        height={width * 0.53}
+                        play={false}
+                        onChangeState={(state) => console.log('Video state:', state)}
+                    />
+                </View>
+            </View>
+        );
+    };
 
     if (loading) {
         return (
@@ -154,7 +168,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 10,
-        backgroundColor: '#DCC4A3',
+        backgroundColor: '#FFDBDC',
     },
     header: {
         flexDirection: 'row',
@@ -163,7 +177,6 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     youtubeContainer: {
-
         borderColor: 'black',
         borderRadius: 20,
         overflow: 'hidden',

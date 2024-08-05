@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchSharedEntries, deleteSharedEntryFromFirestore } from '../redux/actions/gratitudeActions';
+import { fetchSharedEntries, deleteSharedEntryFromFirestore, toggleLikeEntry } from '../redux/actions/gratitudeActions';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import firestore from '@react-native-firebase/firestore';
@@ -52,6 +52,9 @@ const SocialScreen = () => {
         }
     }, [userId]);
 
+    console.log(error);
+
+
     useEffect(() => {
         if (userId && friends.length > 0) {
 
@@ -92,6 +95,23 @@ const SocialScreen = () => {
         );
     };
 
+    const handleLike = async (docId, likes) => {
+        const userLikes = likes || []; // Default to empty array if likes is undefined
+        const userHasLiked = userLikes.includes(currentUserId);
+        const newLikes = userHasLiked
+            ? userLikes.filter(id => id !== currentUserId)
+            : [...userLikes, currentUserId];
+
+        console.log('check like ', docId);
+
+
+        try {
+            await dispatch(toggleLikeEntry({ docId, userId: currentUserId }));
+        } catch (error) {
+            console.error('Failed to toggle like', error);
+        }
+    };
+
     const handleRefresh = useCallback(async () => {
         setRefreshing(true);
         if (userId && friends.length > 0) {
@@ -100,42 +120,52 @@ const SocialScreen = () => {
         setRefreshing(false);
     }, [dispatch, userId, friends]);
 
-    const renderItem = ({ item }) => (
-        <View style={styles.card}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10, paddingHorizontal: 20, }}>
-                {item.shareBy === currentUserId && (
-                    <TouchableOpacity onPress={() => handleDelete(item.docId, item.shareBy)} style={styles.deleteButton}>
-                        {/* <Text style={styles.deleteButtonText}>Xóa</Text> */}
-                        <Icon name='ellipsis-v' size={20} color='rgba(162, 162, 162, 1)' />
-                    </TouchableOpacity>
-                )}
-                <Image source={{ uri: item.avatar }} style={styles.imgAvatar} />
-                <View>
-                    <Text style={styles.cardName}>{item.nameUser}</Text>
-                    <Text style={styles.cardDate}>Đăng Lúc {new Date(item.sharedAt).toLocaleDateString()}</Text>
+    const renderItem = ({ item }) => {
+        const likes = item.likes || [];
+        const userHasLiked = likes.includes(currentUserId);
+        const likeCount = likes.length;
+        console.log(likes);
+
+
+        return (
+            <View style={styles.card}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10, paddingHorizontal: 20, }}>
+                    {item.shareBy === currentUserId && (
+                        <TouchableOpacity onPress={() => handleDelete(item.docId, item.shareBy)} style={styles.deleteButton}>
+                            <Icon name='ellipsis-v' size={20} color='rgba(162, 162, 162, 1)' />
+                        </TouchableOpacity>
+                    )}
+                    <Image source={{ uri: item.avatar }} style={styles.imgAvatar} />
+                    <View>
+                        <Text style={styles.cardName}>{item.nameUser}</Text>
+                        <Text style={styles.cardDate}>Đăng Lúc {new Date(item.sharedAt).toLocaleDateString()}</Text>
+                    </View>
+                </View>
+                <Text style={styles.cardTitle}>{item.status}</Text>
+                <View style={{ borderTopWidth: 1, marginHorizontal: 20, padding: 10, borderColor: 'rgba(38, 38, 38, 0.15)' }}>
+                    <Image source={{ uri: item.image }} style={styles.imgCard} />
+                </View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginHorizontal: 30, marginTop: 10 }}>
+                    <View style={{ flexDirection: 'row', borderEndWidth: 1, paddingRight: 20 }}>
+                        <TouchableOpacity onPress={() => handleLike(item.docId, item.likes)}>
+                            <Icon name={userHasLiked ? 'heart' : 'heart-o'} size={24} color='rgba(162, 162, 162, 1)' />
+                        </TouchableOpacity>
+                        <Text style={styles.likeCount}>{likeCount}</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', borderEndWidth: 1, paddingRight: 20 }}>
+                        <Icon name='comment-o' size={24} color='rgba(162, 162, 162, 1)' />
+                    </View>
+                    <Icon name='share' size={24} color='rgba(162, 162, 162, 1)' />
                 </View>
             </View>
-            <Text style={styles.cardTitle}>{item.status}</Text>
-            <View style={{ borderTopWidth: 1, marginHorizontal: 20, padding: 10, borderColor: 'rgba(38, 38, 38, 0.15)' }}>
-                <Image source={{ uri: item.image }} style={styles.imgCard} />
-            </View>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 20, marginTop: 10 }}>
-                <Icon name='heart-o' size={28} color='rgba(162, 162, 162, 1)' />
-                <Icon name='comment-o' size={28} color='rgba(162, 162, 162, 1)' />
-                <Icon name='share' size={28} color='rgba(162, 162, 162, 1)' />
-            </View>
-            {/*<Text style={styles.cardTitle}>{item.title}</Text>
-            <Text style={styles.cardContent}>{item.content}</Text>
-            <Text style={styles.cardDate}>Đăng Lúc {new Date(item.sharedAt).toLocaleDateString()}</Text>
-             <Text style={styles.cardSharedBy}>Shared by {item.shareBy}</Text> */}
-        </View>
-    );
+        );
+    };
 
     return (
         <SafeAreaView style={styles.container}>
             <Text style={styles.title}>Bài Đăng</Text>
             {status === 'loading' && <Text>Loading...</Text>}
-            {error && <Text style={styles.error}>{error}</Text>}
+            {/* {error && <Text style={styles.error}>{error}</Text>} */}
             <FlatList
                 data={sharedEntries}
                 renderItem={renderItem}
@@ -175,6 +205,12 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         borderWidth: 1,
 
+    },
+    likeCount: {
+        marginLeft: 10,
+        fontSize: 16,
+        color: 'rgba(162, 162, 162, 1)',
+        alignSelf: 'center',
     },
     imgAvatar: {
         width: 35,
